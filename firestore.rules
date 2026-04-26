@@ -37,7 +37,8 @@ service cloud.firestore {
 
     // bookmarks collection
     match /bookmarks/{bookmarkId} {
-      allow read: if isSignedIn() && existing().userId == request.auth.uid;
+      allow get: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
       
       allow create: if isSignedIn()
         && incoming().userId == request.auth.uid
