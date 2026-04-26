@@ -3,23 +3,26 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { AppProvider } from './contexts/AppContext';
 import { Header } from './components/Header';
 import { LocationPrompt } from './components/LocationPrompt';
 import { NewsGrid } from './components/NewsGrid';
 import { Footer } from './components/Footer';
+import { AboutUs } from './components/AboutUs';
 
 export default function App() {
+  const [currentPage, setCurrentPage] = useState<'home' | 'about'>('home');
+
   return (
     <AppProvider>
       <div className="min-h-screen border-t-4 border-blue-900 bg-slate-50 font-sans text-gray-900 flex flex-col">
-        <Header />
+        <Header onLogoClick={() => setCurrentPage('home')} />
         <LocationPrompt />
         <div className="flex-1">
-          <NewsGrid />
+          {currentPage === 'home' ? <NewsGrid /> : <AboutUs />}
         </div>
-        <Footer />
+        <Footer onAboutClick={() => setCurrentPage('about')} />
       </div>
     </AppProvider>
   );

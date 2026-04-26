@@ -4,7 +4,7 @@ import { useAppContext } from '../contexts/AppContext';
 import { getTranslation } from '../lib/translations';
 import { Clock } from './Clock';
 
-export function Header() {
+export function Header({ onLogoClick }: { onLogoClick: () => void }) {
   const { user, login, logout, language } = useAppContext();
 
   return (
@@ -15,7 +15,7 @@ export function Header() {
           <button className="md:hidden p-2 text-slate-500 hover:text-blue-900 transition-colors">
             <Menu className="h-6 w-6" />
           </button>
-          <a href="#" className="flex items-center gap-2 text-2xl font-extrabold tracking-tighter text-blue-900 italic">
+          <a href="#" onClick={(e) => { e.preventDefault(); onLogoClick(); }} className="flex items-center gap-2 text-2xl font-extrabold tracking-tighter text-blue-900 italic">
             <Globe className="h-6 w-6 text-blue-600 hidden sm:block" />
             <span className="hidden sm:inline-block">NITIN<span className="text-red-600">GLOBAL</span>NEWS</span>
             <span className="sm:hidden text-blue-900">N<span className="text-red-600">G</span>N</span>
