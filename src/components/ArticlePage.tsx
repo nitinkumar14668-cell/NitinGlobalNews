@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import ReactPlayer from "react-player";
 import {
   X,
   ExternalLink,
@@ -255,22 +254,36 @@ export function ArticlePage({ article, onBack }: ArticlePageProps) {
         <div className="relative aspect-video w-full bg-slate-100 overflow-hidden group">
           {article.videoUrl ? (
             <div className="w-full h-full bg-black flex items-center justify-center relative">
-              <ReactPlayer
-                url={article.videoUrl}
-                width="100%"
-                height="100%"
-                controls={true}
-                light={article.imageUrl}
-                playIcon={
-                  <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center shadow-lg hover:bg-blue-700 transition">
-                    <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z"/>
-                    </svg>
-                  </div>
-                }
-                pip={true}
-                stopOnUnmount={false}
-                style={{ position: 'absolute', top: 0, left: 0 }}
+              <iframe
+                src={(() => {
+                  const url = article.videoUrl;
+                  if (!url) return '';
+                  
+                  let videoId = '';
+                  
+                  if (url.includes('youtube.com/embed/')) {
+                    videoId = url.split('youtube.com/embed/')[1].split('?')[0];
+                  } else if (url.includes('youtube.com/watch?v=')) {
+                    try {
+                      videoId = new URL(url).searchParams.get('v') || '';
+                    } catch (e) {
+                      const match = url.match(/[?&]v=([^&]+)/);
+                      if (match) videoId = match[1];
+                    }
+                  } else if (url.includes('youtu.be/')) {
+                    videoId = url.split('youtu.be/')[1].split('?')[0];
+                  }
+                  
+                  if (videoId) {
+                    return `https://www.youtube.com/embed/${videoId}?autoplay=0&showinfo=0&rel=0`;
+                  }
+                  
+                  return url;
+                })()}
+                title="Video News"
+                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full absolute inset-0 border-none"
               />
             </div>
           ) : (
