@@ -17,6 +17,7 @@ type AppContextType = {
   isOffline: boolean;
   timezone: string;
   articleStats: Record<string, { viewCount: number }>;
+  isAdmin: boolean;
   login: () => Promise<void>;
   logout: () => Promise<void>;
   requestLocation: () => void;
@@ -36,6 +37,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
   const [articleStats, setArticleStats] = useState<Record<string, { viewCount: number }>>({});
+
+  const isAdmin = user?.email === 'nitinkumar14668@gmail.com';
 
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);
@@ -150,7 +153,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AppContext.Provider value={{ user, loadingAuth, locationState, countryCode, language, setLanguage, autoTranslate, setAutoTranslate, isOffline, timezone, articleStats, login, logout, requestLocation, recordView }}>
+    <AppContext.Provider value={{ user, loadingAuth, locationState, countryCode, language, setLanguage, autoTranslate, setAutoTranslate, isOffline, timezone, articleStats, isAdmin, login, logout, requestLocation, recordView }}>
       {children}
     </AppContext.Provider>
   );

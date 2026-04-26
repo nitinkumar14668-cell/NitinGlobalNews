@@ -4,6 +4,8 @@ import { useAppContext } from '../contexts/AppContext';
 import { getTranslation } from '../lib/translations';
 import { ArticleModal } from './ArticleModal';
 import { Eye, PlayCircle, MapPin, Loader2 } from 'lucide-react';
+import { collection, onSnapshot, query, orderBy, limit as firestoreLimit } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 const SkeletonArticle = ({ isFeatured }: { isFeatured?: boolean }) => (
   <div className={`group cursor-pointer bg-white p-4 rounded-xl border border-slate-200 shadow-sm animate-pulse ${isFeatured ? 'col-span-1 md:col-span-12 lg:col-span-8 flex-col' : 'col-span-1 md:col-span-6 lg:col-span-4 flex-col sm:flex-row lg:flex-col gap-4'}`}>
@@ -29,10 +31,36 @@ export function NewsGrid() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [page, setPage] = useState<number>(1);
   const [articles, setArticles] = useState<Article[]>([]);
+  const [liveArticles, setLiveArticles] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const ARTICLES_PER_PAGE = 20;
 
   const CACHE_KEY = `cachedArticles_${selectedCategory}_${countryCode}`;
+
+  useEffect(() => {
+    // Listen to live articles
+    const q = query(collection(db, 'articles'), orderBy('createdAt', 'desc'), firestoreLimit(50));
+    const unsub = onSnapshot(q, (snapshot) => {
+      const fetched: Article[] = [];
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        fetched.push({
+          id: doc.id,
+          title: data.title,
+          summary: data.summary,
+          content: data.content || data.summary,
+          imageUrl: data.imageUrl,
+          sourceUrl: data.sourceUrl,
+          videoUrl: data.videoUrl,
+          category: data.category,
+          timestamp: data.timestamp,
+          location: data.location
+        });
+      });
+      setLiveArticles(fetched);
+    });
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     // Reset when category changes
@@ -154,7 +182,7 @@ export function NewsGrid() {
             ))}
           </>
         ) : (
-          articles.map((article, index) => {
+          [...liveArticles.filter(a => selectedCategory === 'all' || a.category === selectedCategory || (selectedCategory === 'local' && a.location)), ...articles].map((article, index) => {
             const title = article.title[language] || article.title['en'];
             const summary = article.summary[language] || article.summary['en'];
             const isFeatured = index === 0;

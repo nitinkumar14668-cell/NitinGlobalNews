@@ -11,10 +11,11 @@ import { NewsGrid } from "./components/NewsGrid";
 import { Footer } from "./components/Footer";
 import { AboutUs } from "./components/AboutUs";
 import { UserProfile } from "./components/UserProfile";
+import { AdminPanel } from "./components/AdminPanel";
 import { SEO } from "./components/SEO";
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState<"home" | "about" | "profile">(
+  const [currentPage, setCurrentPage] = useState<"home" | "about" | "profile" | "admin">(
     "home",
   );
 
@@ -25,11 +26,13 @@ export default function App() {
         <Header
           onLogoClick={() => setCurrentPage("home")}
           onProfileClick={() => setCurrentPage("profile")}
+          onAdminClick={() => setCurrentPage("admin")}
         />
         <LocationPrompt />
         <div className="flex-1">
           {currentPage === "home" && <NewsGrid />}
           {currentPage === "about" && <AboutUs />}
+          {currentPage === "admin" && <AdminPanel onBack={() => setCurrentPage("home")} />}
           {currentPage === "profile" && (
             <UserProfile onBack={() => setCurrentPage("home")} />
           )}
