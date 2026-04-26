@@ -12,6 +12,8 @@ type AppContextType = {
   countryCode: string;
   language: string;
   setLanguage: (lang: string) => void;
+  autoTranslate: boolean;
+  setAutoTranslate: (val: boolean) => void;
   timezone: string;
   articleStats: Record<string, { viewCount: number }>;
   login: () => Promise<void>;
@@ -29,6 +31,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [locationState, setLocationState] = useState<'prompt' | 'granted' | 'denied' | 'loading'>('prompt');
   const [countryCode, setCountryCode] = useState('US');
   const [language, setLanguage] = useState('en');
+  const [autoTranslate, setAutoTranslate] = useState(true);
   const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
   const [articleStats, setArticleStats] = useState<Record<string, { viewCount: number }>>({});
 
@@ -134,7 +137,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AppContext.Provider value={{ user, loadingAuth, locationState, countryCode, language, setLanguage, timezone, articleStats, login, logout, requestLocation, recordView }}>
+    <AppContext.Provider value={{ user, loadingAuth, locationState, countryCode, language, setLanguage, autoTranslate, setAutoTranslate, timezone, articleStats, login, logout, requestLocation, recordView }}>
       {children}
     </AppContext.Provider>
   );

@@ -11,6 +11,10 @@ import {
   BookmarkCheck,
   Eye,
   Loader2,
+  Twitter,
+  Facebook,
+  Linkedin,
+  Languages
 } from "lucide-react";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import {
@@ -34,7 +38,7 @@ interface ArticleModalProps {
 }
 
 export function ArticleModal({ article, onClose }: ArticleModalProps) {
-  const { user, language, recordView, articleStats } = useAppContext();
+  const { user, language, recordView, articleStats, autoTranslate } = useAppContext();
   const modalRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
@@ -109,7 +113,19 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
         return;
       }
       
-      // Otherwise, hit the API to translate from English to the preferred mode
+      if (!autoTranslate || language === 'en') {
+        setTranslatedTitle(initialTitle);
+        setTranslatedContent(initialContent);
+        return;
+      }
+      
+      handleManualTranslate();
+    };
+    translateArticle();
+  }, [article, language, initialTitle, initialContent, autoTranslate]);
+
+  const handleManualTranslate = async () => {
+      // Hit the API to translate from English to the preferred mode
       setIsTranslating(true);
       try {
         const { translateText } = await import("../lib/gemini");
@@ -124,9 +140,7 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
       } finally {
         setIsTranslating(false);
       }
-    };
-    translateArticle();
-  }, [article, language, initialTitle, initialContent]);
+  };
 
   const handleGenerateImage = async () => {
     setIsGeneratingImage(true);
@@ -323,6 +337,19 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
                 <Eye className="w-4 h-4" />
                 <span>{articleStats[article.id]?.viewCount || 0} views</span>
               </div>
+              {!autoTranslate && language !== 'en' && translatedTitle === initialTitle && !article.title[language] && (
+                 <>
+                   <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+                   <button 
+                     onClick={handleManualTranslate}
+                     className="text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors"
+                     disabled={isTranslating}
+                   >
+                     <Languages className="w-4 h-4" />
+                     {isTranslating ? 'Translating...' : 'Translate'}
+                   </button>
+                 </>
+              )}
             </div>
 
             <div className="prose prose-slate max-w-none text-slate-700 leading-relaxed text-base sm:text-lg whitespace-pre-wrap">
@@ -368,22 +395,53 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
                   </>
                 )}
               </button>
-              <button
-                onClick={handleShare}
-                className="flex items-center justify-center gap-2 rounded border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors flex-1 sm:flex-none"
-              >
-                {copied ? (
-                  <>
-                    Copied!
-                    <Check className="h-4 w-4 text-green-600" />
-                  </>
-                ) : (
-                  <>
-                    Share
-                    <Share2 className="h-4 w-4" />
-                  </>
-                )}
-              </button>
+              <div className="flex flex-col sm:flex-row items-center gap-2 flex-1 sm:flex-none">
+                <button
+                  onClick={handleShare}
+                  className="w-full flex items-center justify-center gap-2 rounded border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"
+                >
+                  {copied ? (
+                    <>
+                      Copied!
+                      <Check className="h-4 w-4 text-green-600" />
+                    </>
+                  ) : (
+                    <>
+                      Copy Link
+                      <Share2 className="h-4 w-4" />
+                    </>
+                  )}
+                </button>
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-center">
+                  <a
+                    href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(article.sourceUrl || window.location.href)}&text=${encodeURIComponent(translatedTitle)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 flex items-center justify-center rounded border border-slate-300 bg-white text-slate-600 hover:text-blue-400 hover:border-blue-200 hover:bg-blue-50 transition-colors shadow-sm"
+                    aria-label="Share on Twitter"
+                  >
+                    <Twitter className="w-4 h-4" />
+                  </a>
+                  <a
+                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(article.sourceUrl || window.location.href)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 flex items-center justify-center rounded border border-slate-300 bg-white text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-colors shadow-sm"
+                    aria-label="Share on Facebook"
+                  >
+                    <Facebook className="w-4 h-4" />
+                  </a>
+                  <a
+                    href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(article.sourceUrl || window.location.href)}&title=${encodeURIComponent(translatedTitle)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 flex items-center justify-center rounded border border-slate-300 bg-white text-slate-600 hover:text-blue-700 hover:border-blue-200 hover:bg-blue-50 transition-colors shadow-sm"
+                    aria-label="Share on LinkedIn"
+                  >
+                    <Linkedin className="w-4 h-4" />
+                  </a>
+                </div>
+              </div>
             </div>
 
             <Comments articleId={article.id} />

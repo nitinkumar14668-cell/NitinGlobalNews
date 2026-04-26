@@ -4,7 +4,7 @@ import { ArrowLeft, Globe, Bell, Save } from 'lucide-react';
 import { getTranslation } from '../lib/translations';
 
 export function UserSettings({ onBack }: { onBack: () => void }) {
-  const { language, setLanguage } = useAppContext();
+  const { language, setLanguage, autoTranslate, setAutoTranslate } = useAppContext();
   const [notifications, setNotifications] = useState({
     push: true,
     email: false,
@@ -64,6 +64,22 @@ export function UserSettings({ onBack }: { onBack: () => void }) {
               ))}
             </div>
             <p className="text-xs text-slate-500 mt-2">Changes apply immediately to article titles, categories, and system text.</p>
+          </div>
+
+          <div className="flex items-center justify-between p-4 rounded-xl border border-slate-200 bg-white shadow-sm mt-4">
+            <div>
+              <h4 className="font-bold text-slate-800 text-sm">Automatic Article Translation</h4>
+              <p className="text-xs text-slate-500 mt-1">Automatically translate articles to your preferred language.</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input 
+                type="checkbox" 
+                className="sr-only peer" 
+                checked={autoTranslate}
+                onChange={(e) => setAutoTranslate(e.target.checked)}
+              />
+              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
           </div>
         </section>
 
