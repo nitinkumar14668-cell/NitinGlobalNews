@@ -7,6 +7,11 @@ import { ArticleModal } from './ArticleModal';
 export function NewsGrid() {
   const { language } = useAppContext();
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+
+  const filteredArticles = selectedCategory === 'all' 
+    ? mockArticles 
+    : mockArticles.filter(a => a.category === selectedCategory);
 
   return (
     <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
@@ -15,14 +20,35 @@ export function NewsGrid() {
           {getTranslation(language, 'latestNews')}
         </h1>
         <div className="hidden sm:flex gap-4 text-xs font-bold uppercase tracking-wider text-slate-500">
-          <button className="text-blue-900 border-b-2 border-blue-900 pb-1">{getTranslation(language, 'world')}</button>
-          <button className="hover:text-blue-900 pb-1">{getTranslation(language, 'trending')}</button>
-          <button className="hover:text-blue-900 pb-1">{getTranslation(language, 'tech')}</button>
+          <button 
+            onClick={() => setSelectedCategory('all')}
+            className={`${selectedCategory === 'all' ? 'text-blue-900 border-b-2 border-blue-900' : 'hover:text-blue-900'} pb-1 transition-colors`}
+          >
+            All
+          </button>
+          <button 
+            onClick={() => setSelectedCategory('world')}
+            className={`${selectedCategory === 'world' ? 'text-blue-900 border-b-2 border-blue-900' : 'hover:text-blue-900'} pb-1 transition-colors`}
+          >
+            {getTranslation(language, 'world')}
+          </button>
+          <button 
+            onClick={() => setSelectedCategory('trending')}
+            className={`${selectedCategory === 'trending' ? 'text-blue-900 border-b-2 border-blue-900' : 'hover:text-blue-900'} pb-1 transition-colors`}
+          >
+            {getTranslation(language, 'trending')}
+          </button>
+          <button 
+            onClick={() => setSelectedCategory('tech')}
+            className={`${selectedCategory === 'tech' ? 'text-blue-900 border-b-2 border-blue-900' : 'hover:text-blue-900'} pb-1 transition-colors`}
+          >
+            {getTranslation(language, 'tech')}
+          </button>
         </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        {mockArticles.map((article, index) => {
+        {filteredArticles.map((article, index) => {
           const title = article.title[language] || article.title['en'];
           const summary = article.summary[language] || article.summary['en'];
           const isFeatured = index === 0;

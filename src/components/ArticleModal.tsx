@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { X, ExternalLink } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { X, ExternalLink, Share2, Check } from 'lucide-react';
 import { Article } from '../data/news';
 import { useAppContext } from '../contexts/AppContext';
 import { getTranslation } from '../lib/translations';
@@ -12,6 +12,7 @@ interface ArticleModalProps {
 export function ArticleModal({ article, onClose }: ArticleModalProps) {
   const { language } = useAppContext();
   const modalRef = useRef<HTMLDivElement>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -34,6 +35,31 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
   const title = article.title[language] || article.title['en'];
   const content = article.content?.[language] || article.content?.['en'] || article.summary[language] || article.summary['en'];
   const categoryStr = getTranslation(language, article.category) || article.category;
+
+  const handleShare = async () => {
+    const urlStr = article.sourceUrl || window.location.href;
+    const shareData = {
+      title: title,
+      text: content.substring(0, 100) + '...',
+      url: urlStr,
+    };
+
+    if (navigator.share && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.error('Error sharing:', err);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(urlStr);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        console.error('Failed to copy text: ', err);
+      }
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
@@ -93,19 +119,35 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
               {content}
             </div>
 
-            {article.sourceUrl && (
-              <div className="mt-10 flex justify-center border-t border-slate-100 pt-8">
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-4 border-t border-slate-100 pt-8">
+              {article.sourceUrl && (
                 <a
                   href={article.sourceUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 rounded bg-blue-600 px-6 py-3 text-sm font-bold text-white shadow-sm hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-colors"
+                  className="flex items-center justify-center gap-2 rounded bg-blue-600 px-6 py-3 text-sm font-bold text-white shadow-sm hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-colors flex-1 sm:flex-none"
                 >
                   {getTranslation(language, 'readMore')}
                   <ExternalLink className="h-4 w-4" />
                 </a>
-              </div>
-            )}
+              )}
+              <button
+                onClick={handleShare}
+                className="flex items-center justify-center gap-2 rounded border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors flex-1 sm:flex-none"
+              >
+                {copied ? (
+                  <>
+                    Copied!
+                    <Check className="h-4 w-4 text-green-600" />
+                  </>
+                ) : (
+                  <>
+                    Share
+                    <Share2 className="h-4 w-4" />
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>

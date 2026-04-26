@@ -37,7 +37,7 @@ export const mockArticles: Article[] = [
   },
   {
     id: "2",
-    category: "world",
+    category: "trending",
     timestamp: "2026-04-26T02:00:00Z",
     imageUrl: "https://images.unsplash.com/photo-1526304640581-d334cdbdf45e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
     title: {
