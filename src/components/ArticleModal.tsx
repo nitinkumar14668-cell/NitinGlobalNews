@@ -1,9 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { X, ExternalLink, Share2, Check, ZoomIn, ZoomOut, Maximize } from 'lucide-react';
+import { X, ExternalLink, Share2, Check, ZoomIn, ZoomOut, Maximize, Bookmark, BookmarkCheck } from 'lucide-react';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
+import { doc, getDoc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { Article } from '../data/news';
 import { useAppContext } from '../contexts/AppContext';
 import { getTranslation } from '../lib/translations';
+import { handleFirestoreError, OperationType } from '../lib/firestoreError';
 import { Comments } from './Comments';
 
 interface ArticleModalProps {
@@ -12,9 +15,11 @@ interface ArticleModalProps {
 }
 
 export function ArticleModal({ article, onClose }: ArticleModalProps) {
-  const { language } = useAppContext();
+  const { user, language } = useAppContext();
   const modalRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [bookmarkLoading, setBookmarkLoading] = useState(false);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -24,19 +29,56 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
     if (article) {
       document.body.style.overflow = 'hidden';
       window.addEventListener('keydown', handleEscape);
+      
+      const checkBookmark = async () => {
+        if (!user) return;
+        try {
+          const docRef = doc(db, 'bookmarks', `${user.uid}_${article.id}`);
+          const docSnap = await getDoc(docRef);
+          setIsBookmarked(docSnap.exists());
+        } catch (error) {
+          handleFirestoreError(error, OperationType.GET, 'bookmarks');
+        }
+      };
+      checkBookmark();
     }
     
     return () => {
       document.body.style.overflow = '';
       window.removeEventListener('keydown', handleEscape);
     };
-  }, [article, onClose]);
+  }, [article, onClose, user]);
 
   if (!article) return null;
 
   const title = article.title[language] || article.title['en'];
   const content = article.content?.[language] || article.content?.['en'] || article.summary[language] || article.summary['en'];
   const categoryStr = getTranslation(language, article.category) || article.category;
+
+  const handleBookmark = async () => {
+    if (!user) return alert("Please sign in to bookmark articles.");
+    
+    setBookmarkLoading(true);
+    const docRef = doc(db, 'bookmarks', `${user.uid}_${article.id}`);
+    
+    try {
+      if (isBookmarked) {
+        await deleteDoc(docRef);
+        setIsBookmarked(false);
+      } else {
+        await setDoc(docRef, {
+          userId: user.uid,
+          articleId: article.id,
+          createdAt: serverTimestamp()
+        });
+        setIsBookmarked(true);
+      }
+    } catch (error) {
+      handleFirestoreError(error, isBookmarked ? OperationType.DELETE : OperationType.CREATE, 'bookmarks');
+    } finally {
+      setBookmarkLoading(false);
+    }
+  };
 
   const handleShare = async () => {
     const urlStr = article.sourceUrl || window.location.href;
@@ -172,6 +214,23 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
                   <ExternalLink className="h-4 w-4" />
                 </a>
               )}
+              <button
+                onClick={handleBookmark}
+                disabled={bookmarkLoading}
+                className={`flex items-center justify-center gap-2 rounded border px-6 py-3 text-sm font-bold shadow-sm transition-colors flex-1 sm:flex-none ${isBookmarked ? 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}
+              >
+                {isBookmarked ? (
+                  <>
+                    Saved
+                    <BookmarkCheck className="h-4 w-4" />
+                  </>
+                ) : (
+                  <>
+                    Save
+                    <Bookmark className="h-4 w-4" />
+                  </>
+                )}
+              </button>
               <button
                 onClick={handleShare}
                 className="flex items-center justify-center gap-2 rounded border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors flex-1 sm:flex-none"

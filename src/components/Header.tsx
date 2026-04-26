@@ -4,7 +4,7 @@ import { useAppContext } from '../contexts/AppContext';
 import { getTranslation } from '../lib/translations';
 import { Clock } from './Clock';
 
-export function Header({ onLogoClick }: { onLogoClick: () => void }) {
+export function Header({ onLogoClick, onProfileClick }: { onLogoClick: () => void, onProfileClick: () => void }) {
   const { user, login, logout, language } = useAppContext();
 
   return (
@@ -30,9 +30,10 @@ export function Header({ onLogoClick }: { onLogoClick: () => void }) {
           </div>
           {user ? (
             <div className="flex items-center gap-3">
-              {user.photoURL && (
-                <img src={user.photoURL} alt={user.displayName || 'User'} className="h-8 w-8 rounded-full border border-slate-200" />
-              )}
+              <button onClick={onProfileClick} className="flex items-center gap-2 hover:opacity-80 transition-opacity" title="View Profile">
+                <img src={user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName || 'User'}&background=0D8ABC&color=fff`} alt={user.displayName || 'User'} className="h-8 w-8 rounded-full border border-slate-200" />
+                <span className="text-sm font-semibold hidden lg:inline-block text-slate-800">{user.displayName?.split(' ')[0]}</span>
+              </button>
               <button
                 onClick={logout}
                 className="flex items-center gap-2 bg-white border border-slate-300 px-4 py-1.5 rounded text-sm font-semibold text-slate-700 google-shadow hover:bg-slate-50 transition-colors"
