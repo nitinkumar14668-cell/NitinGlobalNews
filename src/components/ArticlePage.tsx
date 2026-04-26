@@ -34,8 +34,6 @@ import { handleFirestoreError, OperationType } from "../lib/firestoreError";
 import { Comments } from "./Comments";
 import { SEO } from "./SEO";
 
-import ReactPlayer from "react-player";
-
 interface ArticlePageProps {
   article: Article;
   onBack: () => void;
@@ -233,13 +231,26 @@ export function ArticlePage({ article, onBack }: ArticlePageProps) {
         <div className="relative aspect-video w-full bg-slate-100 overflow-hidden group">
           {article.videoUrl ? (
             <div className="w-full h-full bg-black flex items-center justify-center relative">
-              <ReactPlayer
-                url={article.videoUrl}
-                width="100%"
-                height="100%"
-                controls={true}
-                playing={false}
-                style={{ position: 'absolute', top: 0, left: 0 }}
+              <iframe
+                src={(() => {
+                  const url = article.videoUrl;
+                  if (!url) return '';
+                  if (url.includes('youtube.com/embed/')) return url;
+                  if (url.includes('youtube.com/watch?v=')) {
+                    try {
+                      return `https://www.youtube.com/embed/${new URL(url).searchParams.get('v')}`;
+                    } catch (e) { return url; }
+                  }
+                  if (url.includes('youtu.be/')) {
+                    const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+                    return `https://www.youtube.com/embed/${videoId}`;
+                  }
+                  return url;
+                })()}
+                title="Video News"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full absolute inset-0 border-none"
               />
             </div>
           ) : (
@@ -396,17 +407,6 @@ export function ArticlePage({ article, onBack }: ArticlePageProps) {
           </div>
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4 border-t border-slate-100 pt-8">
-            {article.sourceUrl && (
-              <a
-                href={article.sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 rounded bg-blue-600 px-6 py-3 text-sm font-bold text-white shadow-sm hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-colors flex-1 sm:flex-none"
-              >
-                {getTranslation(language, "readMore")}
-                <ExternalLink className="h-4 w-4" />
-              </a>
-            )}
             <button
               onClick={handleBookmark}
               disabled={bookmarkLoading}
