@@ -253,7 +253,17 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
                     wrapperClass="!w-full !h-full"
                     contentClass="!w-full !h-full"
                   >
-                    {isGeneratingImage ? (
+                    {article.videoUrl ? (
+                      <div className="w-full h-full bg-black flex items-center justify-center">
+                        <iframe 
+                          src={article.videoUrl} 
+                          title="Video News" 
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                          allowFullScreen 
+                          className="w-full h-full border-none"
+                        />
+                      </div>
+                    ) : isGeneratingImage ? (
                       <div className="h-full w-full bg-slate-900 flex flex-col items-center justify-center text-white p-6">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
                         <p className="text-sm font-medium">
@@ -274,7 +284,7 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
 
                   {/* Zoom Controls Overlay */}
                   <div className="absolute right-4 top-16 z-20 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {!isGeneratingImage && (
+                    {!isGeneratingImage && !article.videoUrl && (
                       <button
                         onClick={handleGenerateImage}
                         className="bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-2 rounded-full backdrop-blur-sm text-xs font-bold mb-2 shadow-lg"

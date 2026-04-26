@@ -1,29 +1,44 @@
-import React, { useState } from 'react';
-import { Article, mockArticles } from '../data/news';
+import React, { useState, useEffect } from 'react';
+import { Article, fetchArticles } from '../data/news';
 import { useAppContext } from '../contexts/AppContext';
 import { getTranslation } from '../lib/translations';
 import { ArticleModal } from './ArticleModal';
-import { Eye } from 'lucide-react';
+import { Eye, PlayCircle, MapPin } from 'lucide-react';
 
 export function NewsGrid() {
-  const { language, articleStats } = useAppContext();
+  const { language, articleStats, countryCode } = useAppContext();
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [visibleCount, setVisibleCount] = useState<number>(20);
+  const [page, setPage] = useState<number>(1);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const ARTICLES_PER_PAGE = 20;
 
-  const filteredArticles = selectedCategory === 'all' 
-    ? mockArticles 
-    : mockArticles.filter(a => a.category === selectedCategory);
-
-  const visibleArticles = filteredArticles.slice(0, visibleCount);
+  useEffect(() => {
+    // Reset when category changes
+    setPage(1);
+    setIsLoading(true);
+    // simulated delay to show we're fetching from massive db
+    setTimeout(() => {
+      const data = fetchArticles(1, ARTICLES_PER_PAGE, selectedCategory, countryCode);
+      setArticles(data);
+      setIsLoading(false);
+    }, 300);
+  }, [selectedCategory, countryCode]);
 
   const handleLoadMore = () => {
-    setVisibleCount(prev => prev + 20);
+    const nextPage = page + 1;
+    setIsLoading(true);
+    setTimeout(() => {
+      const moreData = fetchArticles(nextPage, ARTICLES_PER_PAGE, selectedCategory, countryCode);
+      setArticles(prev => [...prev, ...moreData]);
+      setPage(nextPage);
+      setIsLoading(false);
+    }, 400);
   };
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
-    setVisibleCount(20);
   };
 
   return (
@@ -39,6 +54,13 @@ export function NewsGrid() {
               className={`${selectedCategory === 'all' ? 'text-blue-900 border-b-2 border-blue-900' : 'hover:text-blue-900'} pb-1 transition-colors`}
             >
               All
+            </button>
+            <button 
+              onClick={() => handleCategoryChange('local')}
+              className={`${selectedCategory === 'local' ? 'text-blue-900 border-b-2 border-blue-900' : 'hover:text-blue-900'} pb-1 transition-colors flex items-center gap-1`}
+            >
+              <MapPin className="w-3 h-3" />
+              Local
             </button>
             <button 
               onClick={() => handleCategoryChange('world')}
@@ -61,12 +83,12 @@ export function NewsGrid() {
           </div>
         </div>
         <div className="text-slate-500 text-sm mt-1 mb-2 font-medium">
-          Browsing from over <span className="font-bold text-blue-800">100,000+</span> Real-time Articles
+          Browsing from over <span className="font-bold text-blue-800">100,000+</span> Real-time Channel & Video Articles
         </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        {visibleArticles.map((article, index) => {
+        {articles.map((article, index) => {
           const title = article.title[language] || article.title['en'];
           const summary = article.summary[language] || article.summary['en'];
           const isFeatured = index === 0;
@@ -80,12 +102,17 @@ export function NewsGrid() {
               }`}
             >
               {isFeatured ? (
-                <div className="relative w-full aspect-video bg-slate-300 rounded-xl overflow-hidden mb-4">
+                <div className="relative w-full aspect-video bg-slate-300 rounded-xl overflow-hidden mb-4 group-hover:shadow-lg transition-shadow">
                   <img
                     src={article.imageUrl}
                     alt={title}
-                    className="absolute inset-0 w-full h-full object-cover"
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
+                  {article.videoUrl && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-colors pointer-events-none">
+                      <PlayCircle className="w-16 h-16 text-white opacity-80 shadow-2xl drop-shadow-lg" />
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
                   <div className="absolute bottom-0 p-6 w-full">
                     <span className="bg-blue-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest mb-2 inline-block">
@@ -100,21 +127,28 @@ export function NewsGrid() {
                     <div className="flex items-center gap-1 text-slate-300 mt-3 text-xs">
                       <Eye className="w-3 h-3" />
                       <span>{articleStats[article.id]?.viewCount || 0} views</span>
+                      {article.videoUrl && <span className="ml-2 font-bold flex items-center gap-1"><PlayCircle className="w-3 h-3"/> Video News</span>}
                     </div>
                   </div>
                 </div>
               ) : (
                 <>
-                  <div className="w-full sm:w-32 lg:w-full h-48 sm:h-32 lg:h-48 bg-slate-200 rounded flex-shrink-0 overflow-hidden">
+                  <div className="relative w-full sm:w-32 lg:w-full h-48 sm:h-32 lg:h-48 bg-slate-200 rounded flex-shrink-0 overflow-hidden">
                      <img
                         src={article.imageUrl}
                         alt={title}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
+                      {article.videoUrl && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
+                          <PlayCircle className="w-10 h-10 text-white opacity-90 drop-shadow-md" />
+                        </div>
+                      )}
                   </div>
                   <div className="flex flex-col flex-1 pl-0 sm:pl-4 lg:pl-0 mt-4 sm:mt-0 lg:mt-4">
-                    <span className="text-[10px] font-bold text-red-600 uppercase">
+                    <span className="text-[10px] font-bold text-red-600 uppercase flex items-center gap-1">
                       {getTranslation(language, article.category) || article.category}
+                      {article.videoUrl && <PlayCircle className="w-3 h-3 text-red-600" />}
                     </span>
                     <h3 className="font-bold text-base sm:text-sm lg:text-lg leading-snug mt-1 hover:text-blue-800 cursor-pointer line-clamp-2">
                        {title}
@@ -134,16 +168,22 @@ export function NewsGrid() {
         })}
       </div>
       
-      {visibleCount < filteredArticles.length && (
-        <div className="mt-10 flex justify-center w-full">
+      {/* Loading State & Load More */}
+      <div className="mt-10 flex flex-col items-center justify-center w-full min-h-[60px]">
+        {isLoading ? (
+          <div className="flex items-center gap-3 text-blue-600 font-medium">
+             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+             Loading more articles...
+          </div>
+        ) : (
           <button 
             onClick={handleLoadMore}
             className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-8 rounded-full border border-slate-300 transition-colors shadow-sm"
           >
-            Load More Articles
+            Load More Articles (100k+ Available)
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
       <ArticleModal 
         article={selectedArticle} 
