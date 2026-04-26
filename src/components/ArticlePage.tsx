@@ -34,6 +34,8 @@ import { handleFirestoreError, OperationType } from "../lib/firestoreError";
 import { Comments } from "./Comments";
 import { SEO } from "./SEO";
 
+import ReactPlayer from "react-player";
+
 interface ArticlePageProps {
   article: Article;
   onBack: () => void;
@@ -204,7 +206,16 @@ export function ArticlePage({ article, onBack }: ArticlePageProps) {
       <SEO
         title={`${translatedTitle} - NitinGlobalNews | Breaking News`}
         description={translatedContent.substring(0, 160) + "..."}
-        keywords={[...articleKeywords, categoryStr.toLowerCase(), "Breaking news", "Live update", "Top story"]}
+        keywords={[
+          ...articleKeywords,
+          categoryStr.toLowerCase(),
+          "breaking news 2026",
+          "exclusive coverage",
+          "in-depth analysis",
+          "latest updates today",
+          `${categoryStr.toLowerCase()} trends`,
+          "viral news"
+        ]}
         image={article.imageUrl}
         type="article"
       />
@@ -220,13 +231,14 @@ export function ArticlePage({ article, onBack }: ArticlePageProps) {
       <div className="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden">
         <div className="relative aspect-video w-full bg-slate-100 overflow-hidden group">
           {article.videoUrl ? (
-            <div className="w-full h-full bg-black flex items-center justify-center">
-              <iframe 
-                src={article.videoUrl} 
-                title="Video News" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowFullScreen 
-                className="w-full h-full border-none"
+            <div className="w-full h-full bg-black flex items-center justify-center relative">
+              <ReactPlayer
+                url={article.videoUrl}
+                width="100%"
+                height="100%"
+                controls={true}
+                playing={false}
+                style={{ position: 'absolute', top: 0, left: 0 }}
               />
             </div>
           ) : (

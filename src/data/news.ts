@@ -1,3 +1,5 @@
+import { getYoutubeVideos } from '../lib/youtube';
+
 export interface Article {
   id: string;
   title: Record<string, string>;
@@ -147,12 +149,22 @@ export async function fetchArticles(page: number, limit: number, category: strin
       const end = start + limit;
       // We loop the articles if page is larger than array
       const requestedArticles = [];
+      const youtubeVideos = await getYoutubeVideos();
+      
       for (let i = start; i < end; i++) {
         const item = data.articles[i % data.articles.length];
         if (!item) continue;
         
         const globalIndex = i;
         const isVideo = globalIndex % 5 === 0;
+        let videoUrl = undefined;
+        let imgUrl = item.urlToImage || "https://images.unsplash.com/photo-1546422904-90eab23c3d7e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+
+        if (isVideo && youtubeVideos.length > 0) {
+          const ytVideo = youtubeVideos[globalIndex % youtubeVideos.length];
+          videoUrl = `https://www.youtube.com/watch?v=${ytVideo.id.videoId}`;
+          imgUrl = ytVideo.snippet.thumbnails?.high?.url || imgUrl;
+        }
 
         requestedArticles.push({
           id: `${item.url}-${globalIndex}`,
@@ -174,9 +186,9 @@ export async function fetchArticles(page: number, limit: number, category: strin
              fr: item.content || item.description || item.title,
              es: item.content || item.description || item.title
           },
-          imageUrl: item.urlToImage || "https://images.unsplash.com/photo-1546422904-90eab23c3d7e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+          imageUrl: imgUrl,
           sourceUrl: item.url,
-          videoUrl: isVideo ? "https://www.youtube.com/embed/dQw4w9WgXcQ" : undefined,
+          videoUrl: videoUrl,
           category: category,
           timestamp: item.publishedAt || new Date().toISOString(),
           location: location
@@ -204,6 +216,8 @@ export async function fetchArticles(page: number, limit: number, category: strin
   
   if (filtered.length === 0) return result;
 
+  const youtubeVideos = await getYoutubeVideos();
+
   for (let i = 0; i < limit; i++) {
     const globalIndex = start + i;
     if (globalIndex >= 100000) break;
@@ -213,11 +227,23 @@ export async function fetchArticles(page: number, limit: number, category: strin
     
     const isVideo = globalIndex % 5 === 0;
     
+    let videoUrl = base.videoUrl;
+    let imgUrl = base.imageUrl;
+
+    if (isVideo && youtubeVideos.length > 0) {
+      const ytVideo = youtubeVideos[globalIndex % youtubeVideos.length];
+      videoUrl = `https://www.youtube.com/watch?v=${ytVideo.id.videoId}`;
+      imgUrl = ytVideo.snippet.thumbnails?.high?.url || imgUrl;
+    } else if (isVideo) {
+      videoUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+    }
+
     result.push({
       ...base,
       id: `${base.id}-${globalIndex}`,
+      imageUrl: imgUrl,
       category: category === 'local' ? 'local' : base.category,
-      videoUrl: isVideo ? "https://www.youtube.com/embed/dQw4w9WgXcQ" : base.videoUrl,
+      videoUrl: videoUrl,
       location: location,
       title: {
         en: `${category === 'local' && location ? '[' + location + '] ' : ''}${base.title.en} (Live Update ${globalIndex + 1})`,
