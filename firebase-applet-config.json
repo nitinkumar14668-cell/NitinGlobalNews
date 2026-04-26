@@ -1,10 +1,10 @@
 {
-  "projectId": "gen-lang-client-0430773236",
-  "appId": "1:134635418073:web:b83aa580ae1c05d896e9c8",
-  "apiKey": "AIzaSyBQQKqD-Yw-xFT3p3lS17xoCiZktLsaukg",
-  "authDomain": "gen-lang-client-0430773236.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-bd218f10-9551-4b85-ad0d-cc0e4d4a5aba",
-  "storageBucket": "gen-lang-client-0430773236.firebasestorage.app",
-  "messagingSenderId": "134635418073",
-  "measurementId": ""
+  "projectId": "nitinglobalnews",
+  "appId": "1:725848136001:web:a89792bcd6b8764b51e9c0",
+  "apiKey": "AIzaSyCzj8OFQkA_1f6dTIfrl7_bYBP5TD7qxiU",
+  "authDomain": "nitinglobalnews.firebaseapp.com",
+  "firestoreDatabaseId": "(default)",
+  "storageBucket": "nitinglobalnews.firebasestorage.app",
+  "messagingSenderId": "725848136001",
+  "measurementId": "G-R9NY2LW8BE"
 }
