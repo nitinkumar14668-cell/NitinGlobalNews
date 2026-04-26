@@ -1,10 +1,12 @@
-import React from 'react';
-import { mockArticles } from '../data/news';
+import React, { useState } from 'react';
+import { Article, mockArticles } from '../data/news';
 import { useAppContext } from '../contexts/AppContext';
 import { getTranslation } from '../lib/translations';
+import { ArticleModal } from './ArticleModal';
 
 export function NewsGrid() {
   const { language } = useAppContext();
+  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
 
   return (
     <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
@@ -28,7 +30,8 @@ export function NewsGrid() {
           return (
             <article 
               key={article.id} 
-              className={`group relative flex flex-col justify-start bg-white p-4 rounded-xl border border-slate-200 shadow-sm transition-all hover:shadow-md ${
+              onClick={() => setSelectedArticle(article)}
+              className={`group relative flex flex-col justify-start bg-white p-4 rounded-xl border border-slate-200 shadow-sm transition-all hover:shadow-md cursor-pointer ${
                 isFeatured ? 'col-span-1 md:col-span-12 lg:col-span-7 flex flex-col' : 'col-span-1 md:col-span-6 lg:col-span-5 flex-row gap-4'
               }`}
             >
@@ -78,6 +81,11 @@ export function NewsGrid() {
           );
         })}
       </div>
+      
+      <ArticleModal 
+        article={selectedArticle} 
+        onClose={() => setSelectedArticle(null)} 
+      />
     </main>
   );
 }
