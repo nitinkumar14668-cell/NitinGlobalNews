@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { X, ExternalLink, Share2, Check } from 'lucide-react';
+import { X, ExternalLink, Share2, Check, ZoomIn, ZoomOut, Maximize } from 'lucide-react';
+import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import { Article } from '../data/news';
 import { useAppContext } from '../contexts/AppContext';
 import { getTranslation } from '../lib/translations';
+import { Comments } from './Comments';
 
 interface ArticleModalProps {
   article: Article | null;
@@ -84,14 +86,53 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
         </button>
 
         <div className="flex-1 overflow-y-auto">
-          <div className="relative aspect-video w-full sm:aspect-[21/9]">
-            <img
-              src={article.imageUrl}
-              alt={title}
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-            <div className="absolute bottom-0 p-6 w-full text-white">
+          <div className="relative aspect-video w-full sm:aspect-[21/9] overflow-hidden group">
+            <TransformWrapper
+              initialScale={1}
+              minScale={1}
+              maxScale={4}
+              centerOnInit={true}
+              wheel={{ step: 0.1 }}
+            >
+              {({ zoomIn, zoomOut, resetTransform }) => (
+                <>
+                  <TransformComponent wrapperClass="!w-full !h-full" contentClass="!w-full !h-full">
+                    <img
+                      src={article.imageUrl}
+                      alt={title}
+                      className="h-full w-full object-cover"
+                    />
+                  </TransformComponent>
+                  
+                  {/* Zoom Controls Overlay */}
+                  <div className="absolute right-4 top-4 z-20 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button 
+                      onClick={() => zoomIn()} 
+                      className="bg-black/40 hover:bg-black/60 text-white p-2 rounded-full backdrop-blur-sm"
+                      aria-label="Zoom In"
+                    >
+                      <ZoomIn className="w-5 h-5" />
+                    </button>
+                    <button 
+                      onClick={() => zoomOut()} 
+                      className="bg-black/40 hover:bg-black/60 text-white p-2 rounded-full backdrop-blur-sm"
+                      aria-label="Zoom Out"
+                    >
+                      <ZoomOut className="w-5 h-5" />
+                    </button>
+                    <button 
+                      onClick={() => resetTransform()} 
+                      className="bg-black/40 hover:bg-black/60 text-white p-2 rounded-full backdrop-blur-sm"
+                      aria-label="Reset Zoom"
+                    >
+                      <Maximize className="w-5 h-5" />
+                    </button>
+                  </div>
+                </>
+              )}
+            </TransformWrapper>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
+            <div className="absolute bottom-0 p-6 w-full text-white pointer-events-none">
               <span className="mb-3 inline-block rounded bg-blue-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest">
                 {categoryStr}
               </span>
@@ -148,6 +189,8 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
                 )}
               </button>
             </div>
+
+            <Comments articleId={article.id} />
           </div>
         </div>
       </div>
