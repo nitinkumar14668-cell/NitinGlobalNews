@@ -14,7 +14,8 @@ import {
   Twitter,
   Facebook,
   Linkedin,
-  Languages
+  Languages,
+  MessageSquare
 } from "lucide-react";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import {
@@ -166,6 +167,7 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
       if (isBookmarked) {
         await deleteDoc(docRef);
         setIsBookmarked(false);
+        recordStat(article.id, 'bookmarkCount', -1);
       } else {
         await setDoc(docRef, {
           userId: user.uid,
@@ -173,6 +175,7 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
           createdAt: serverTimestamp(),
         });
         setIsBookmarked(true);
+        recordStat(article.id, 'bookmarkCount', 1);
       }
     } catch (error) {
       handleFirestoreError(
@@ -348,7 +351,17 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
               <span className="w-1 h-1 rounded-full bg-slate-300"></span>
               <div className="flex items-center gap-1">
                 <Eye className="w-4 h-4" />
-                <span>{articleStats[article.id]?.viewCount || 0} views</span>
+                <span>{articleStats[article.id]?.viewCount || 0}</span>
+              </div>
+              <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+              <div className="flex items-center gap-1">
+                <Bookmark className="w-4 h-4" />
+                <span>{articleStats[article.id]?.bookmarkCount || 0}</span>
+              </div>
+              <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+              <div className="flex items-center gap-1">
+                <MessageSquare className="w-4 h-4" />
+                <span>{articleStats[article.id]?.commentCount || 0}</span>
               </div>
               {!autoTranslate && language !== 'en' && translatedTitle === initialTitle && !article.title[language] && (
                  <>

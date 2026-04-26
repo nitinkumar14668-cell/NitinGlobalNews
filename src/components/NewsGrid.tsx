@@ -3,7 +3,7 @@ import { Article, fetchArticles } from '../data/news';
 import { useAppContext } from '../contexts/AppContext';
 import { getTranslation } from '../lib/translations';
 import { ArticleModal } from './ArticleModal';
-import { Eye, PlayCircle, MapPin, Loader2 } from 'lucide-react';
+import { Eye, PlayCircle, MapPin, Loader2, Bookmark, MessageSquare } from 'lucide-react';
 import { collection, onSnapshot, query, orderBy, limit as firestoreLimit } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
@@ -249,10 +249,20 @@ export function NewsGrid() {
                     <p className="text-slate-300 text-sm mt-2 line-clamp-2">
                       {summary}
                     </p>
-                    <div className="flex items-center gap-1 text-slate-300 mt-3 text-xs">
-                      <Eye className="w-3 h-3" />
-                      <span>{articleStats[article.id]?.viewCount || 0} views</span>
-                      {article.videoUrl && <span className="ml-2 font-bold flex items-center gap-1"><PlayCircle className="w-3 h-3"/> Video News</span>}
+                    <div className="flex items-center gap-3 text-slate-300 mt-3 text-xs">
+                      <div className="flex items-center gap-1">
+                        <Eye className="w-3 h-3" />
+                        <span>{articleStats[article.id]?.viewCount || 0}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Bookmark className="w-3 h-3" />
+                        <span>{articleStats[article.id]?.bookmarkCount || 0}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <MessageSquare className="w-3 h-3" />
+                        <span>{articleStats[article.id]?.commentCount || 0}</span>
+                      </div>
+                      {article.videoUrl && <span className="ml-2 font-bold flex items-center gap-1"><PlayCircle className="w-3 h-3"/> Video</span>}
                     </div>
                   </div>
                 </div>
@@ -284,9 +294,19 @@ export function NewsGrid() {
                     <p className="text-sm sm:text-xs lg:text-sm text-slate-500 mt-2 line-clamp-2">
                       {summary}
                     </p>
-                    <div className="flex items-center gap-1 text-slate-400 mt-2 text-[10px]">
-                      <Eye className="w-3 h-3" />
-                      <span>{articleStats[article.id]?.viewCount || 0} views</span>
+                    <div className="flex items-center gap-3 text-slate-400 mt-2 text-[10px]">
+                      <div className="flex items-center gap-1">
+                        <Eye className="w-3 h-3" />
+                        <span>{articleStats[article.id]?.viewCount || 0}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Bookmark className="w-3 h-3" />
+                        <span>{articleStats[article.id]?.bookmarkCount || 0}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <MessageSquare className="w-3 h-3" />
+                        <span>{articleStats[article.id]?.commentCount || 0}</span>
+                      </div>
                     </div>
                   </div>
                 </>

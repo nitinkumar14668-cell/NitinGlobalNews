@@ -42,7 +42,7 @@ interface UserComment {
 }
 
 export function UserProfile({ onBack, onAdminClick }: { onBack: () => void, onAdminClick?: () => void }) {
-  const { user, language, articleStats, logout, isAdmin } = useAppContext();
+  const { user, language, articleStats, logout, isAdmin, recordStat } = useAppContext();
   const [bookmarks, setBookmarks] = useState<
     (Article & { bookmarkId: string })[]
   >([]);
@@ -133,10 +133,11 @@ export function UserProfile({ onBack, onAdminClick }: { onBack: () => void, onAd
     fetchComments();
   }, [user, activeTab, language]);
 
-  const removeBookmark = async (bookmarkId: string, e: React.MouseEvent) => {
+  const removeBookmark = async (bookmarkId: string, articleId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
       await deleteDoc(doc(db, "bookmarks", bookmarkId));
+      recordStat(articleId, 'bookmarkCount', -1);
       setBookmarks((prev) => prev.filter((b) => b.bookmarkId !== bookmarkId));
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, "bookmarks");
@@ -302,7 +303,7 @@ export function UserProfile({ onBack, onAdminClick }: { onBack: () => void, onAd
                           <div className="absolute top-2 right-2">
                             <button
                               onClick={(e) =>
-                                removeBookmark(article.bookmarkId, e)
+                                removeBookmark(article.bookmarkId, article.id, e)
                               }
                               className="p-2 bg-white/90 backdrop-blur-sm rounded-full text-slate-600 hover:text-red-500 hover:bg-red-50 transition-colors shadow-sm"
                               aria-label="Remove bookmark"

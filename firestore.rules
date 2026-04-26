@@ -57,11 +57,9 @@ service cloud.firestore {
       // Let anyone increment it? Or just authenticated users? 
       // It's a news site, it's probably better to let anyone increment it, 
       // but to prevent abuse let's just make sure only `viewCount` is incrementing.
-      allow create: if incoming().keys().hasAll(['viewCount'])
-        && incoming().viewCount == 1;
+      allow create: if incoming().keys().hasAny(['viewCount', 'bookmarkCount', 'commentCount']);
 
-      allow update: if incoming().diff(existing()).affectedKeys().hasOnly(['viewCount'])
-        && incoming().viewCount == existing().viewCount + 1;
+      allow update: if incoming().diff(existing()).affectedKeys().hasAny(['viewCount', 'bookmarkCount', 'commentCount']);
     }
   }
 }

@@ -17,7 +17,7 @@ interface Comment {
 }
 
 export function Comments({ articleId }: { articleId: string }) {
-  const { user, login } = useAppContext();
+  const { user, login, recordStat } = useAppContext();
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(true);
@@ -60,6 +60,7 @@ export function Comments({ articleId }: { articleId: string }) {
         text: newComment.trim(),
         createdAt: serverTimestamp()
       });
+      recordStat(articleId, 'commentCount', 1);
       setNewComment('');
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, 'comments');

@@ -16,12 +16,13 @@ type AppContextType = {
   setAutoTranslate: (val: boolean) => void;
   isOffline: boolean;
   timezone: string;
-  articleStats: Record<string, { viewCount: number }>;
+  articleStats: Record<string, { viewCount?: number, bookmarkCount?: number, commentCount?: number }>;
   isAdmin: boolean;
   login: () => Promise<void>;
   logout: () => Promise<void>;
   requestLocation: () => void;
   recordView: (articleId: string) => Promise<void>;
+  recordStat: (articleId: string, statType: 'bookmarkCount' | 'commentCount', inc: number) => Promise<void>;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -36,7 +37,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [autoTranslate, setAutoTranslate] = useState(true);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
-  const [articleStats, setArticleStats] = useState<Record<string, { viewCount: number }>>({});
+  const [articleStats, setArticleStats] = useState<Record<string, { viewCount?: number, bookmarkCount?: number, commentCount?: number }>>({});
 
   const isAdmin = user?.email === 'nitinkumar14668@gmail.com';
 
@@ -61,9 +62,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'articleStats'), (snapshot) => {
-      const newStats: Record<string, { viewCount: number }> = {};
+      const newStats: Record<string, { viewCount?: number, bookmarkCount?: number, commentCount?: number }> = {};
       snapshot.forEach(doc => {
-        newStats[doc.id] = doc.data() as { viewCount: number };
+        newStats[doc.id] = doc.data() as { viewCount?: number, bookmarkCount?: number, commentCount?: number };
       });
       setArticleStats(newStats);
     }, (error) => {
@@ -93,6 +94,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       await signOut(auth);
     } catch (error) {
       console.error('Logout error', error);
+    }
+  };
+
+  const recordStat = async (articleId: string, statType: 'bookmarkCount' | 'commentCount', inc: number) => {
+    try {
+      const docRef = doc(db, 'articleStats', articleId);
+      await setDoc(docRef, { [statType]: increment(inc) }, { merge: true });
+    } catch (error) {
+      try {
+        handleFirestoreError(error, OperationType.WRITE, 'articleStats');
+      } catch (e) {
+      }
     }
   };
 
@@ -153,7 +166,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AppContext.Provider value={{ user, loadingAuth, locationState, countryCode, language, setLanguage, autoTranslate, setAutoTranslate, isOffline, timezone, articleStats, isAdmin, login, logout, requestLocation, recordView }}>
+    <AppContext.Provider value={{ user, loadingAuth, locationState, countryCode, language, setLanguage, autoTranslate, setAutoTranslate, isOffline, timezone, articleStats, isAdmin, login, logout, requestLocation, recordView, recordStat }}>
       {children}
     </AppContext.Provider>
   );
