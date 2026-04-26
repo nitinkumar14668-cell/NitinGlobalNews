@@ -14,6 +14,7 @@ type AppContextType = {
   setLanguage: (lang: string) => void;
   autoTranslate: boolean;
   setAutoTranslate: (val: boolean) => void;
+  isOffline: boolean;
   timezone: string;
   articleStats: Record<string, { viewCount: number }>;
   login: () => Promise<void>;
@@ -32,8 +33,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [countryCode, setCountryCode] = useState('US');
   const [language, setLanguage] = useState('en');
   const [autoTranslate, setAutoTranslate] = useState(true);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
   const [articleStats, setArticleStats] = useState<Record<string, { viewCount: number }>>({});
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
@@ -137,7 +150,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AppContext.Provider value={{ user, loadingAuth, locationState, countryCode, language, setLanguage, autoTranslate, setAutoTranslate, timezone, articleStats, login, logout, requestLocation, recordView }}>
+    <AppContext.Provider value={{ user, loadingAuth, locationState, countryCode, language, setLanguage, autoTranslate, setAutoTranslate, isOffline, timezone, articleStats, login, logout, requestLocation, recordView }}>
       {children}
     </AppContext.Provider>
   );

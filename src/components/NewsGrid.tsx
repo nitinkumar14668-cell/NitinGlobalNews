@@ -24,7 +24,7 @@ const SkeletonArticle = ({ isFeatured }: { isFeatured?: boolean }) => (
 );
 
 export function NewsGrid() {
-  const { language, articleStats, countryCode } = useAppContext();
+  const { language, articleStats, countryCode, isOffline } = useAppContext();
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [page, setPage] = useState<number>(1);
@@ -32,19 +32,43 @@ export function NewsGrid() {
   const [isLoading, setIsLoading] = useState(false);
   const ARTICLES_PER_PAGE = 20;
 
+  const CACHE_KEY = `cachedArticles_${selectedCategory}_${countryCode}`;
+
   useEffect(() => {
     // Reset when category changes
     setPage(1);
     setIsLoading(true);
+    
+    if (isOffline) {
+      // Use cached data
+      setTimeout(() => {
+        const cachedStr = localStorage.getItem(CACHE_KEY);
+        if (cachedStr) {
+          try {
+            setArticles(JSON.parse(cachedStr));
+          } catch (e) {
+            setArticles([]);
+          }
+        } else {
+          setArticles([]);
+        }
+        setIsLoading(false);
+      }, 100);
+      return;
+    }
+
     // simulated delay to show we're fetching from massive db
     setTimeout(() => {
       const data = fetchArticles(1, ARTICLES_PER_PAGE, selectedCategory, countryCode);
       setArticles(data);
+      localStorage.setItem(CACHE_KEY, JSON.stringify(data));
       setIsLoading(false);
     }, 300);
-  }, [selectedCategory, countryCode]);
+  }, [selectedCategory, countryCode, isOffline]);
 
   const handleLoadMore = () => {
+    if (isOffline) return; // Prevent load more when offline
+    
     const nextPage = page + 1;
     setIsLoading(true);
     setTimeout(() => {
@@ -61,6 +85,22 @@ export function NewsGrid() {
 
   return (
     <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+      {isOffline && (
+        <div className="mb-6 bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-md shadow-sm">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-amber-700">
+                You are currently offline. Showing cached articles. Features like translating and video playback may be unavailable.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex flex-col mb-6 border-b border-slate-200 pb-3">
         <div className="flex items-end justify-between">
           <h1 className="news-serif text-3xl font-bold tracking-tight text-blue-900 flex items-center gap-2">
@@ -209,7 +249,7 @@ export function NewsGrid() {
           </div>
         )}
         
-        {!isLoading && (
+        {!isLoading && !isOffline && (
           <button 
             onClick={handleLoadMore}
             className="group relative inline-flex items-center justify-center bg-white hover:bg-slate-50 text-slate-700 font-bold py-4 px-10 rounded-full border border-slate-300 hover:border-blue-400 hover:text-blue-700 transition-all shadow-sm overflow-hidden animate-in zoom-in duration-500"
