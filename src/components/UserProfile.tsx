@@ -6,7 +6,7 @@ import { Article, mockArticles } from '../data/news';
 import { getTranslation } from '../lib/translations';
 import { ArticleModal } from './ArticleModal';
 import { handleFirestoreError, OperationType } from '../lib/firestoreError';
-import { BookmarkMinus, Loader2 } from 'lucide-react';
+import { BookmarkMinus, Loader2, Eye } from 'lucide-react';
 
 interface BookmarkData {
   id: string;
@@ -15,7 +15,7 @@ interface BookmarkData {
 }
 
 export function UserProfile() {
-  const { user, language } = useAppContext();
+  const { user, language, articleStats } = useAppContext();
   const [bookmarks, setBookmarks] = useState<(Article & { bookmarkId: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
@@ -126,8 +126,14 @@ export function UserProfile() {
                   <p className="text-sm text-slate-600 line-clamp-3 mb-4 flex-1">
                     {summary}
                   </p>
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 mt-auto">
-                    <span className="text-blue-600">{getTranslation(language, article.category) || article.category}</span>
+                  <div className="flex items-center justify-between mt-auto">
+                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500">
+                      <span className="text-blue-600">{getTranslation(language, article.category) || article.category}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-slate-400 text-xs">
+                      <Eye className="w-3 h-3" />
+                      <span>{articleStats[article.id]?.viewCount || 0} views</span>
+                    </div>
                   </div>
                 </article>
               );

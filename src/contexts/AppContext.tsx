@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signInWithPopup, signOut, User } from 'firebase/auth';
-import { auth, googleProvider } from '../lib/firebase';
+import { collection, onSnapshot, doc, setDoc, increment } from 'firebase/firestore';
+import { auth, googleProvider, db } from '../lib/firebase';
+import { handleFirestoreError, OperationType } from '../lib/firestoreError';
 import axios from 'axios';
 
 type AppContextType = {
@@ -10,9 +12,11 @@ type AppContextType = {
   countryCode: string;
   language: string;
   timezone: string;
+  articleStats: Record<string, { viewCount: number }>;
   login: () => Promise<void>;
   logout: () => Promise<void>;
   requestLocation: () => void;
+  recordView: (articleId: string) => Promise<void>;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -25,6 +29,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [countryCode, setCountryCode] = useState('US');
   const [language, setLanguage] = useState('en');
   const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const [articleStats, setArticleStats] = useState<Record<string, { viewCount: number }>>({});
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
@@ -32,6 +37,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setLoadingAuth(false);
     });
     return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'articleStats'), (snapshot) => {
+      const newStats: Record<string, { viewCount: number }> = {};
+      snapshot.forEach(doc => {
+        newStats[doc.id] = doc.data() as { viewCount: number };
+      });
+      setArticleStats(newStats);
+    }, (error) => {
+      try {
+        handleFirestoreError(error, OperationType.LIST, 'articleStats');
+      } catch (e) {
+        // catch the thrown error from handleFirestoreError during background sync
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const login = async () => {
@@ -47,6 +70,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       await signOut(auth);
     } catch (error) {
       console.error('Logout error', error);
+    }
+  };
+
+  const recordView = async (articleId: string) => {
+    try {
+      const docRef = doc(db, 'articleStats', articleId);
+      await setDoc(docRef, { viewCount: increment(1) }, { merge: true });
+    } catch (error) {
+      try {
+        handleFirestoreError(error, OperationType.WRITE, 'articleStats');
+      } catch (e) {
+        // ignore errors so the UI doesn't crash on view record failure
+      }
     }
   };
 
@@ -94,7 +130,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AppContext.Provider value={{ user, loadingAuth, locationState, countryCode, language, timezone, login, logout, requestLocation }}>
+    <AppContext.Provider value={{ user, loadingAuth, locationState, countryCode, language, timezone, articleStats, login, logout, requestLocation, recordView }}>
       {children}
     </AppContext.Provider>
   );

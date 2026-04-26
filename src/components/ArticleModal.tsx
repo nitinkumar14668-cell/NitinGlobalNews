@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { X, ExternalLink, Share2, Check, ZoomIn, ZoomOut, Maximize, Bookmark, BookmarkCheck } from 'lucide-react';
+import { X, ExternalLink, Share2, Check, ZoomIn, ZoomOut, Maximize, Bookmark, BookmarkCheck, Eye } from 'lucide-react';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import { doc, getDoc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -15,11 +15,22 @@ interface ArticleModalProps {
 }
 
 export function ArticleModal({ article, onClose }: ArticleModalProps) {
-  const { user, language } = useAppContext();
+  const { user, language, recordView, articleStats } = useAppContext();
   const modalRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
+  const hasRecordedViewRef = useRef(false);
+
+  useEffect(() => {
+    if (article && !hasRecordedViewRef.current) {
+      recordView(article.id);
+      hasRecordedViewRef.current = true;
+    }
+    if (!article) {
+      hasRecordedViewRef.current = false;
+    }
+  }, [article, recordView]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -196,6 +207,11 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
               </time>
               <span className="w-1 h-1 rounded-full bg-slate-300"></span>
               <span>NitinGlobalNews</span>
+              <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+              <div className="flex items-center gap-1">
+                <Eye className="w-4 h-4" />
+                <span>{articleStats[article.id]?.viewCount || 0} views</span>
+              </div>
             </div>
             
             <div className="prose prose-slate max-w-none text-slate-700 leading-relaxed text-base sm:text-lg whitespace-pre-wrap">

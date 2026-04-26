@@ -3,9 +3,10 @@ import { Article, mockArticles } from '../data/news';
 import { useAppContext } from '../contexts/AppContext';
 import { getTranslation } from '../lib/translations';
 import { ArticleModal } from './ArticleModal';
+import { Eye } from 'lucide-react';
 
 export function NewsGrid() {
-  const { language } = useAppContext();
+  const { language, articleStats } = useAppContext();
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
@@ -79,6 +80,10 @@ export function NewsGrid() {
                     <p className="text-slate-300 text-sm mt-2 line-clamp-2">
                       {summary}
                     </p>
+                    <div className="flex items-center gap-1 text-slate-300 mt-3 text-xs">
+                      <Eye className="w-3 h-3" />
+                      <span>{articleStats[article.id]?.viewCount || 0} views</span>
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -100,6 +105,10 @@ export function NewsGrid() {
                     <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
                       {summary}
                     </p>
+                    <div className="flex items-center gap-1 text-slate-400 mt-2 text-[10px]">
+                      <Eye className="w-3 h-3" />
+                      <span>{articleStats[article.id]?.viewCount || 0} views</span>
+                    </div>
                   </div>
                 </>
               )}
