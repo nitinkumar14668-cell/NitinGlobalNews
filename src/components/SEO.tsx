@@ -16,8 +16,8 @@ export function SEO({
   title = seoData.defaultTitle, 
   description = seoData.defaultDescription, 
   keywords = [], 
-  image = 'https://nitinglobalnews.com/og-image.jpg', 
-  url = 'https://nitinglobalnews.com/',
+  image = 'https://globalnews-ten.vercel.app/og-image.jpg', 
+  url = 'https://globalnews-ten.vercel.app/',
   type = 'website',
   category
 }: SEOProps) {
