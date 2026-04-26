@@ -1,0 +1,66 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function existing() {
+      return resource.data;
+    }
+    
+    function incoming() {
+      return request.resource.data;
+    }
+
+    // comments collection
+    match /comments/{commentId} {
+      // allow read to all for comments
+      allow read: if true;
+      
+      allow create: if isSignedIn()
+        && incoming().userId == request.auth.uid
+        && incoming().articleId is string
+        && incoming().text is string
+        && incoming().text.size() > 0
+        && incoming().text.size() <= 10000;
+        
+      allow update, delete: if isSignedIn() 
+        && existing().userId == request.auth.uid;
+    }
+
+    // bookmarks collection
+    match /bookmarks/{bookmarkId} {
+      allow read: if isSignedIn() && existing().userId == request.auth.uid;
+      
+      allow create: if isSignedIn()
+        && incoming().userId == request.auth.uid
+        && incoming().articleId is string
+        && bookmarkId == request.auth.uid + "_" + incoming().articleId;
+        
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    // articleStats collection
+    match /articleStats/{articleId} {
+      // Anyone can see the stats (even unauthenticated users, since views are global)
+      // Since NewsGrid renders these stats for all users, they need to be readable.
+      allow read: if true;
+      
+      // Let anyone increment it? Or just authenticated users? 
+      // It's a news site, it's probably better to let anyone increment it, 
+      // but to prevent abuse let's just make sure only `viewCount` is incrementing.
+      allow create: if incoming().keys().hasAll(['viewCount'])
+        && incoming().viewCount == 1;
+
+      allow update: if incoming().diff(existing()).affectedKeys().hasOnly(['viewCount'])
+        && incoming().viewCount == existing().viewCount + 1;
+    }
+  }
+}
