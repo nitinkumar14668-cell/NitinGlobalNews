@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Article, fetchArticles } from '../data/news';
 import { useAppContext } from '../contexts/AppContext';
 import { getTranslation } from '../lib/translations';
-import { ArticleModal } from './ArticleModal';
 import { Eye, PlayCircle, MapPin, Loader2, Bookmark, MessageSquare } from 'lucide-react';
 import { collection, onSnapshot, query, orderBy, limit as firestoreLimit } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -25,9 +24,8 @@ const SkeletonArticle = ({ isFeatured }: { isFeatured?: boolean }) => (
   </div>
 );
 
-export function NewsGrid() {
+export function NewsGrid({ onArticleSelect }: { onArticleSelect: (article: Article) => void }) {
   const { language, articleStats, countryCode, isOffline } = useAppContext();
-  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [page, setPage] = useState<number>(1);
   const [articles, setArticles] = useState<Article[]>([]);
@@ -218,7 +216,7 @@ export function NewsGrid() {
             return (
               <article 
                 key={article.id} 
-                onClick={() => setSelectedArticle(article)}
+                onClick={() => onArticleSelect(article)}
                 className={`group relative flex justify-start bg-white p-4 rounded-xl border border-slate-200 shadow-sm transition-all hover:shadow-md cursor-pointer ${
                   isFeatured ? 'col-span-1 md:col-span-12 lg:col-span-8 flex-col' : 'col-span-1 md:col-span-6 lg:col-span-4 flex-col sm:flex-row lg:flex-col gap-4'
                 }`}
@@ -329,11 +327,6 @@ export function NewsGrid() {
           <div id="infinite-scroll-trigger" className="h-10 w-full" />
         )}
       </div>
-
-      <ArticleModal 
-        article={selectedArticle} 
-        onClose={() => setSelectedArticle(null)} 
-      />
     </main>
   );
 }

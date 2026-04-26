@@ -12,7 +12,6 @@ import { db } from "../lib/firebase";
 import { useAppContext } from "../contexts/AppContext";
 import { Article, mockArticles } from "../data/news";
 import { getTranslation } from "../lib/translations";
-import { ArticleModal } from "./ArticleModal";
 import { handleFirestoreError, OperationType } from "../lib/firestoreError";
 import { UserSettings } from './UserSettings';
 import {
@@ -41,13 +40,12 @@ interface UserComment {
   createdAt: Timestamp;
 }
 
-export function UserProfile({ onBack, onAdminClick }: { onBack: () => void, onAdminClick?: () => void }) {
+export function UserProfile({ onBack, onAdminClick, onArticleSelect }: { onBack: () => void, onAdminClick?: () => void, onArticleSelect: (article: Article) => void }) {
   const { user, language, articleStats, logout, isAdmin, recordStat } = useAppContext();
   const [bookmarks, setBookmarks] = useState<
     (Article & { bookmarkId: string })[]
   >([]);
   const [loading, setLoading] = useState(true);
-  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
 
   const [activeTab, setActiveTab] = useState<"bookmarks" | "comments">(
     "bookmarks",
@@ -291,7 +289,7 @@ export function UserProfile({ onBack, onAdminClick }: { onBack: () => void, onAd
                     return (
                       <article
                         key={article.bookmarkId}
-                        onClick={() => setSelectedArticle(article)}
+                        onClick={() => onArticleSelect(article)}
                         className="group relative flex flex-col bg-white p-4 rounded-xl border border-slate-200 shadow-sm transition-all hover:shadow-md hover:border-blue-300 cursor-pointer h-full"
                       >
                         <div className="relative aspect-video w-full overflow-hidden rounded-lg mb-4">
@@ -372,13 +370,10 @@ export function UserProfile({ onBack, onAdminClick }: { onBack: () => void, onAd
                           Commented on:{" "}
                           <span
                             className="text-blue-600 font-semibold cursor-pointer hover:underline"
-                            onClick={() =>
-                              setSelectedArticle(
-                                mockArticles.find(
-                                  (a) => a.id === comment.articleId,
-                                ) || null,
-                              )
-                            }
+                            onClick={() => {
+                              const relatedArticle = mockArticles.find((a) => a.id === comment.articleId);
+                              if (relatedArticle) onArticleSelect(relatedArticle);
+                            }}
                           >
                             {comment.articleTitle}
                           </span>
@@ -414,11 +409,6 @@ export function UserProfile({ onBack, onAdminClick }: { onBack: () => void, onAd
           )}
         </div>
       </div>
-
-      <ArticleModal
-        article={selectedArticle}
-        onClose={() => setSelectedArticle(null)}
-      />
     </main>
   );
 }

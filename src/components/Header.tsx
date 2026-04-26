@@ -1,18 +1,15 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Globe, LogIn, LogOut, Menu } from 'lucide-react';
 import { useAppContext } from '../contexts/AppContext';
 import { getTranslation } from '../lib/translations';
 import { Clock } from './Clock';
 import { SearchBar } from './SearchBar';
-import { ArticleModal } from './ArticleModal';
 import { Article } from '../data/news';
 
-export function Header({ onLogoClick, onProfileClick }: { onLogoClick: () => void, onProfileClick: () => void }) {
+export function Header({ onLogoClick, onProfileClick, onArticleSelect }: { onLogoClick: () => void, onProfileClick: () => void, onArticleSelect: (article: Article) => void }) {
   const { user, login, logout, language } = useAppContext();
-  const [searchSelectedArticle, setSearchSelectedArticle] = useState<Article | null>(null);
 
   return (
-    <>
     <header className="sticky top-0 z-40 bg-white border-b px-4 sm:px-6 py-3 flex items-center justify-between google-shadow">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between">
         
@@ -32,7 +29,7 @@ export function Header({ onLogoClick, onProfileClick }: { onLogoClick: () => voi
         </div>
 
         <div className="flex items-center gap-3 sm:gap-4">
-          <SearchBar onSelectArticle={setSearchSelectedArticle} />
+          <SearchBar onSelectArticle={onArticleSelect} />
           
           <div className="hidden lg:flex flex-col items-end text-[10px] leading-tight text-slate-500">
             <span className="font-bold text-blue-800 uppercase">Lang: {language}</span>
@@ -63,11 +60,5 @@ export function Header({ onLogoClick, onProfileClick }: { onLogoClick: () => voi
         </div>
       </div>
     </header>
-    
-    <ArticleModal 
-      article={searchSelectedArticle} 
-      onClose={() => setSearchSelectedArticle(null)} 
-    />
-    </>
   );
 }
