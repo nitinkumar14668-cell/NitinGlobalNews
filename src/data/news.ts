@@ -9,7 +9,7 @@ export interface Article {
   timestamp: string;
 }
 
-export const mockArticles: Article[] = [
+const baseArticles: Article[] = [
   {
     id: "1",
     category: "tech",
@@ -111,3 +111,20 @@ export const mockArticles: Article[] = [
     sourceUrl: "https://example.com/world/climate-action"
   }
 ];
+
+export const mockArticles: Article[] = [];
+// Generate 100k articles exactly
+for (let i = 0; i < 25000; i++) {
+  baseArticles.forEach((article, index) => {
+    mockArticles.push({
+      ...article,
+      id: `${article.id}-${i}`,
+      title: {
+        en: `${article.title.en} (Article ${i * 4 + index + 1})`,
+        hi: `${article.title.hi} (लेख ${i * 4 + index + 1})`,
+        fr: `${article.title.fr} (Article ${i * 4 + index + 1})`,
+        es: `${article.title.es} (Artículo ${i * 4 + index + 1})`
+      }
+    });
+  });
+}

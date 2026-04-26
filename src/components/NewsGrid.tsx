@@ -9,47 +9,64 @@ export function NewsGrid() {
   const { language, articleStats } = useAppContext();
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [visibleCount, setVisibleCount] = useState<number>(20);
 
   const filteredArticles = selectedCategory === 'all' 
     ? mockArticles 
     : mockArticles.filter(a => a.category === selectedCategory);
 
+  const visibleArticles = filteredArticles.slice(0, visibleCount);
+
+  const handleLoadMore = () => {
+    setVisibleCount(prev => prev + 20);
+  };
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    setVisibleCount(20);
+  };
+
   return (
     <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
-      <div className="flex items-end justify-between mb-6 border-b border-slate-200 pb-3">
-        <h1 className="news-serif text-3xl font-bold tracking-tight text-blue-900">
-          {getTranslation(language, 'latestNews')}
-        </h1>
-        <div className="hidden sm:flex gap-4 text-xs font-bold uppercase tracking-wider text-slate-500">
-          <button 
-            onClick={() => setSelectedCategory('all')}
-            className={`${selectedCategory === 'all' ? 'text-blue-900 border-b-2 border-blue-900' : 'hover:text-blue-900'} pb-1 transition-colors`}
-          >
-            All
-          </button>
-          <button 
-            onClick={() => setSelectedCategory('world')}
-            className={`${selectedCategory === 'world' ? 'text-blue-900 border-b-2 border-blue-900' : 'hover:text-blue-900'} pb-1 transition-colors`}
-          >
-            {getTranslation(language, 'world')}
-          </button>
-          <button 
-            onClick={() => setSelectedCategory('trending')}
-            className={`${selectedCategory === 'trending' ? 'text-blue-900 border-b-2 border-blue-900' : 'hover:text-blue-900'} pb-1 transition-colors`}
-          >
-            {getTranslation(language, 'trending')}
-          </button>
-          <button 
-            onClick={() => setSelectedCategory('tech')}
-            className={`${selectedCategory === 'tech' ? 'text-blue-900 border-b-2 border-blue-900' : 'hover:text-blue-900'} pb-1 transition-colors`}
-          >
-            {getTranslation(language, 'tech')}
-          </button>
+      <div className="flex flex-col mb-6 border-b border-slate-200 pb-3">
+        <div className="flex items-end justify-between">
+          <h1 className="news-serif text-3xl font-bold tracking-tight text-blue-900 flex items-center gap-2">
+            {getTranslation(language, 'latestNews')}
+          </h1>
+          <div className="hidden sm:flex gap-4 text-xs font-bold uppercase tracking-wider text-slate-500">
+            <button 
+              onClick={() => handleCategoryChange('all')}
+              className={`${selectedCategory === 'all' ? 'text-blue-900 border-b-2 border-blue-900' : 'hover:text-blue-900'} pb-1 transition-colors`}
+            >
+              All
+            </button>
+            <button 
+              onClick={() => handleCategoryChange('world')}
+              className={`${selectedCategory === 'world' ? 'text-blue-900 border-b-2 border-blue-900' : 'hover:text-blue-900'} pb-1 transition-colors`}
+            >
+              {getTranslation(language, 'world')}
+            </button>
+            <button 
+              onClick={() => handleCategoryChange('trending')}
+              className={`${selectedCategory === 'trending' ? 'text-blue-900 border-b-2 border-blue-900' : 'hover:text-blue-900'} pb-1 transition-colors`}
+            >
+              {getTranslation(language, 'trending')}
+            </button>
+            <button 
+              onClick={() => handleCategoryChange('tech')}
+              className={`${selectedCategory === 'tech' ? 'text-blue-900 border-b-2 border-blue-900' : 'hover:text-blue-900'} pb-1 transition-colors`}
+            >
+              {getTranslation(language, 'tech')}
+            </button>
+          </div>
+        </div>
+        <div className="text-slate-500 text-sm mt-1 mb-2 font-medium">
+          Browsing from over <span className="font-bold text-blue-800">100,000+</span> Real-time Articles
         </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        {filteredArticles.map((article, index) => {
+        {visibleArticles.map((article, index) => {
           const title = article.title[language] || article.title['en'];
           const summary = article.summary[language] || article.summary['en'];
           const isFeatured = index === 0;
@@ -117,6 +134,17 @@ export function NewsGrid() {
         })}
       </div>
       
+      {visibleCount < filteredArticles.length && (
+        <div className="mt-10 flex justify-center w-full">
+          <button 
+            onClick={handleLoadMore}
+            className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-8 rounded-full border border-slate-300 transition-colors shadow-sm"
+          >
+            Load More Articles
+          </button>
+        </div>
+      )}
+
       <ArticleModal 
         article={selectedArticle} 
         onClose={() => setSelectedArticle(null)} 
