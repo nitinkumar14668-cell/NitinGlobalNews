@@ -1,14 +1,31 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { X, ExternalLink, Share2, Check, ZoomIn, ZoomOut, Maximize, Bookmark, BookmarkCheck, Eye } from 'lucide-react';
-import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
-import { doc, getDoc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../lib/firebase';
-import { Article } from '../data/news';
-import { useAppContext } from '../contexts/AppContext';
-import { getTranslation } from '../lib/translations';
-import { handleFirestoreError, OperationType } from '../lib/firestoreError';
-import { Comments } from './Comments';
-import { SEO } from './SEO';
+import React, { useEffect, useRef, useState } from "react";
+import {
+  X,
+  ExternalLink,
+  Share2,
+  Check,
+  ZoomIn,
+  ZoomOut,
+  Maximize,
+  Bookmark,
+  BookmarkCheck,
+  Eye,
+} from "lucide-react";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  deleteDoc,
+  serverTimestamp,
+} from "firebase/firestore";
+import { db } from "../lib/firebase";
+import { Article } from "../data/news";
+import { useAppContext } from "../contexts/AppContext";
+import { getTranslation } from "../lib/translations";
+import { handleFirestoreError, OperationType } from "../lib/firestoreError";
+import { Comments } from "./Comments";
+import { SEO } from "./SEO";
 
 interface ArticleModalProps {
   article: Article | null;
@@ -35,44 +52,70 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === "Escape") onClose();
     };
-    
+
     if (article) {
-      document.body.style.overflow = 'hidden';
-      window.addEventListener('keydown', handleEscape);
-      
+      document.body.style.overflow = "hidden";
+      window.addEventListener("keydown", handleEscape);
+
       const checkBookmark = async () => {
         if (!user) return;
         try {
-          const docRef = doc(db, 'bookmarks', `${user.uid}_${article.id}`);
+          const docRef = doc(db, "bookmarks", `${user.uid}_${article.id}`);
           const docSnap = await getDoc(docRef);
           setIsBookmarked(docSnap.exists());
         } catch (error) {
-          handleFirestoreError(error, OperationType.GET, 'bookmarks');
+          handleFirestoreError(error, OperationType.GET, "bookmarks");
         }
       };
       checkBookmark();
     }
-    
+
     return () => {
-      document.body.style.overflow = '';
-      window.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleEscape);
     };
   }, [article, onClose, user]);
 
   if (!article) return null;
 
-  const title = article.title[language] || article.title['en'];
-  const content = article.content?.[language] || article.content?.['en'] || article.summary[language] || article.summary['en'];
-  const categoryStr = getTranslation(language, article.category) || article.category;
+  const title = article.title[language] || article.title["en"];
+  const content =
+    article.content?.[language] ||
+    article.content?.["en"] ||
+    article.summary[language] ||
+    article.summary["en"];
+  const categoryStr =
+    getTranslation(language, article.category) || article.category;
+
+  const [currentImageUrl, setCurrentImageUrl] = useState(article.imageUrl);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+
+  useEffect(() => {
+    if (article) setCurrentImageUrl(article.imageUrl);
+  }, [article]);
+
+  const handleGenerateImage = async () => {
+    setIsGeneratingImage(true);
+    try {
+      const { generateArticleImage } = await import("../lib/gemini");
+      const newImage = await generateArticleImage(title + ". " + content);
+      setCurrentImageUrl(newImage);
+    } catch (error) {
+      console.error("Error generating image:", error);
+      alert("Failed to generate image.");
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
 
   const handleBookmark = async () => {
     if (!user) return alert("Please sign in to bookmark articles.");
-    
+
     setBookmarkLoading(true);
-    const docRef = doc(db, 'bookmarks', `${user.uid}_${article.id}`);
-    
+    const docRef = doc(db, "bookmarks", `${user.uid}_${article.id}`);
+
     try {
       if (isBookmarked) {
         await deleteDoc(docRef);
@@ -81,12 +124,16 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
         await setDoc(docRef, {
           userId: user.uid,
           articleId: article.id,
-          createdAt: serverTimestamp()
+          createdAt: serverTimestamp(),
         });
         setIsBookmarked(true);
       }
     } catch (error) {
-      handleFirestoreError(error, isBookmarked ? OperationType.DELETE : OperationType.CREATE, 'bookmarks');
+      handleFirestoreError(
+        error,
+        isBookmarked ? OperationType.DELETE : OperationType.CREATE,
+        "bookmarks",
+      );
     } finally {
       setBookmarkLoading(false);
     }
@@ -96,7 +143,7 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
     const urlStr = article.sourceUrl || window.location.href;
     const shareData = {
       title: title,
-      text: content.substring(0, 100) + '...',
+      text: content.substring(0, 100) + "...",
       url: urlStr,
     };
 
@@ -104,7 +151,7 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
       try {
         await navigator.share(shareData);
       } catch (err) {
-        console.error('Error sharing:', err);
+        console.error("Error sharing:", err);
       }
     } else {
       try {
@@ -112,26 +159,26 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       } catch (err) {
-        console.error('Failed to copy text: ', err);
+        console.error("Failed to copy text: ", err);
       }
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-      <SEO 
+      <SEO
         title={`${title} - NitinGlobalNews`}
-        description={content.substring(0, 150) + '...'}
+        description={content.substring(0, 150) + "..."}
         image={article.imageUrl}
         type="article"
       />
-      <div 
-        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" 
+      <div
+        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />
-      
-      <div 
+
+      <div
         ref={modalRef}
         className="relative flex w-full max-w-3xl max-h-[90vh] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl google-shadow animate-in fade-in zoom-in-95 duration-200 border-t-4 border-blue-900"
         role="dialog"
@@ -156,32 +203,56 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
             >
               {({ zoomIn, zoomOut, resetTransform }) => (
                 <>
-                  <TransformComponent wrapperClass="!w-full !h-full" contentClass="!w-full !h-full">
-                    <img
-                      src={article.imageUrl}
-                      alt={title}
-                      className="h-full w-full object-cover"
-                    />
+                  <TransformComponent
+                    wrapperClass="!w-full !h-full"
+                    contentClass="!w-full !h-full"
+                  >
+                    {isGeneratingImage ? (
+                      <div className="h-full w-full bg-slate-900 flex flex-col items-center justify-center text-white p-6">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+                        <p className="text-sm font-medium">
+                          Generating AI Image...
+                        </p>
+                        <p className="text-xs text-slate-400 mt-2 text-center">
+                          Creating an image using Gemini 2.5 Flash
+                        </p>
+                      </div>
+                    ) : (
+                      <img
+                        src={currentImageUrl}
+                        alt={title}
+                        className="h-full w-full object-cover"
+                      />
+                    )}
                   </TransformComponent>
-                  
+
                   {/* Zoom Controls Overlay */}
-                  <div className="absolute right-4 top-4 z-20 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button 
-                      onClick={() => zoomIn()} 
+                  <div className="absolute right-4 top-16 z-20 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {!isGeneratingImage && (
+                      <button
+                        onClick={handleGenerateImage}
+                        className="bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-2 rounded-full backdrop-blur-sm text-xs font-bold mb-2 shadow-lg"
+                        title="Generate Image with AI"
+                      >
+                        ✨ AI Image
+                      </button>
+                    )}
+                    <button
+                      onClick={() => zoomIn()}
                       className="bg-black/40 hover:bg-black/60 text-white p-2 rounded-full backdrop-blur-sm"
                       aria-label="Zoom In"
                     >
                       <ZoomIn className="w-5 h-5" />
                     </button>
-                    <button 
-                      onClick={() => zoomOut()} 
+                    <button
+                      onClick={() => zoomOut()}
                       className="bg-black/40 hover:bg-black/60 text-white p-2 rounded-full backdrop-blur-sm"
                       aria-label="Zoom Out"
                     >
                       <ZoomOut className="w-5 h-5" />
                     </button>
-                    <button 
-                      onClick={() => resetTransform()} 
+                    <button
+                      onClick={() => resetTransform()}
                       className="bg-black/40 hover:bg-black/60 text-white p-2 rounded-full backdrop-blur-sm"
                       aria-label="Reset Zoom"
                     >
@@ -205,11 +276,11 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
           <div className="px-6 py-8 sm:px-8">
             <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-wider text-slate-500 mb-6 border-b border-slate-100 pb-4">
               <time dateTime={article.timestamp}>
-                {new Date(article.timestamp).toLocaleDateString(language, { 
-                  weekday: 'long',
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
+                {new Date(article.timestamp).toLocaleDateString(language, {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
                 })}
               </time>
               <span className="w-1 h-1 rounded-full bg-slate-300"></span>
@@ -220,7 +291,7 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
                 <span>{articleStats[article.id]?.viewCount || 0} views</span>
               </div>
             </div>
-            
+
             <div className="prose prose-slate max-w-none text-slate-700 leading-relaxed text-base sm:text-lg whitespace-pre-wrap">
               {content}
             </div>
@@ -233,14 +304,14 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 rounded bg-blue-600 px-6 py-3 text-sm font-bold text-white shadow-sm hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-colors flex-1 sm:flex-none"
                 >
-                  {getTranslation(language, 'readMore')}
+                  {getTranslation(language, "readMore")}
                   <ExternalLink className="h-4 w-4" />
                 </a>
               )}
               <button
                 onClick={handleBookmark}
                 disabled={bookmarkLoading}
-                className={`flex items-center justify-center gap-2 rounded border px-6 py-3 text-sm font-bold shadow-sm transition-colors flex-1 sm:flex-none ${isBookmarked ? 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}
+                className={`flex items-center justify-center gap-2 rounded border px-6 py-3 text-sm font-bold shadow-sm transition-colors flex-1 sm:flex-none ${isBookmarked ? "bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100" : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50"}`}
               >
                 {isBookmarked ? (
                   <>
