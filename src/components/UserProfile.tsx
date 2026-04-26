@@ -14,6 +14,7 @@ import { Article, mockArticles } from "../data/news";
 import { getTranslation } from "../lib/translations";
 import { ArticleModal } from "./ArticleModal";
 import { handleFirestoreError, OperationType } from "../lib/firestoreError";
+import { UserSettings } from './UserSettings';
 import {
   BookmarkMinus,
   Loader2,
@@ -22,6 +23,7 @@ import {
   Bookmark,
   MessageSquare,
   ArrowLeft,
+  Settings,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -53,6 +55,7 @@ export function UserProfile({ onBack }: { onBack: () => void }) {
     (UserComment & { articleTitle: string })[]
   >([]);
   const [loadingComments, setLoadingComments] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     const fetchBookmarks = async () => {
@@ -153,6 +156,14 @@ export function UserProfile({ onBack }: { onBack: () => void }) {
     ? new Date(user.metadata.creationTime)
     : new Date();
 
+  if (showSettings) {
+    return (
+      <main className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <UserSettings onBack={() => setShowSettings(false)} />
+      </main>
+    );
+  }
+
   return (
     <main className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8 md:py-12 animate-in fade-in duration-500">
       <button
@@ -181,6 +192,13 @@ export function UserProfile({ onBack }: { onBack: () => void }) {
               className="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-white shadow-md object-cover bg-white z-10"
             />
             <div className="flex gap-3 relative z-10">
+              <button
+                onClick={() => setShowSettings(true)}
+                className="flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-5 py-2 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"
+              >
+                <Settings className="w-4 h-4" />
+                Settings
+              </button>
               <button
                 onClick={logout}
                 className="rounded-lg border border-slate-300 bg-white px-5 py-2 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"

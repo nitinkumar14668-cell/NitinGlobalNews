@@ -11,6 +11,7 @@ type AppContextType = {
   locationState: 'prompt' | 'granted' | 'denied' | 'loading';
   countryCode: string;
   language: string;
+  setLanguage: (lang: string) => void;
   timezone: string;
   articleStats: Record<string, { viewCount: number }>;
   login: () => Promise<void>;
@@ -133,7 +134,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AppContext.Provider value={{ user, loadingAuth, locationState, countryCode, language, timezone, articleStats, login, logout, requestLocation, recordView }}>
+    <AppContext.Provider value={{ user, loadingAuth, locationState, countryCode, language, setLanguage, timezone, articleStats, login, logout, requestLocation, recordView }}>
       {children}
     </AppContext.Provider>
   );
