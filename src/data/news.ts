@@ -133,18 +133,72 @@ for (let i = 0; i < 25; i++) {
 }
 
 // Simulated dynamic fetcher that acts like we have 100k
-export function fetchArticles(page: number, limit: number, category: string, location?: string): Article[] {
+export async function fetchArticles(page: number, limit: number, category: string, location?: string): Promise<Article[]> {
+  try {
+    const apiCategory = category === 'world' || category === 'local' ? 'general' : category === 'tech' ? 'technology' : category === 'trending' ? 'entertainment' : category === 'all' ? 'general' : category;
+    const country = location === 'IN' ? 'in' : 'us'; 
+    const url = `https://saurav.tech/NewsAPI/top-headlines/category/${apiCategory}/${country}.json`;
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    if (data && data.articles && data.articles.length > 0) {
+      const start = (page - 1) * limit;
+      const end = start + limit;
+      // We loop the articles if page is larger than array
+      const requestedArticles = [];
+      for (let i = start; i < end; i++) {
+        const item = data.articles[i % data.articles.length];
+        if (!item) continue;
+        
+        const globalIndex = i;
+        const isVideo = globalIndex % 5 === 0;
+
+        requestedArticles.push({
+          id: `${item.url}-${globalIndex}`,
+          title: {
+             en: item.title,
+             hi: item.title,
+             fr: item.title,
+             es: item.title
+          },
+          summary: {
+             en: item.description || item.title,
+             hi: item.description || item.title,
+             fr: item.description || item.title,
+             es: item.description || item.title
+          },
+          content: {
+             en: item.content || item.description || item.title,
+             hi: item.content || item.description || item.title,
+             fr: item.content || item.description || item.title,
+             es: item.content || item.description || item.title
+          },
+          imageUrl: item.urlToImage || "https://images.unsplash.com/photo-1546422904-90eab23c3d7e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+          sourceUrl: item.url,
+          videoUrl: isVideo ? "https://www.youtube.com/embed/dQw4w9WgXcQ" : undefined,
+          category: category,
+          timestamp: item.publishedAt || new Date().toISOString(),
+          location: location
+        });
+      }
+      return requestedArticles;
+    }
+  } catch (error) {
+    console.error("Error fetching real news:", error);
+  }
+
+  // Fallback to mock data
   let filtered = baseArticles;
   
   if (category !== 'all') {
     if (category === 'local' && location) {
-      filtered = baseArticles; // Simulating local, just returning all for now, we'll label them
+      filtered = baseArticles;
     } else {
       filtered = baseArticles.filter(a => a.category === category);
     }
   }
 
-  // Generate requested page on-the-fly to support up to 100k without memory issues
   const start = (page - 1) * limit;
   const result: Article[] = [];
   
@@ -152,18 +206,18 @@ export function fetchArticles(page: number, limit: number, category: string, loc
 
   for (let i = 0; i < limit; i++) {
     const globalIndex = start + i;
-    if (globalIndex >= 100000) break; // Maximum 100k
+    if (globalIndex >= 100000) break;
     
     const baseIndex = globalIndex % filtered.length;
     const base = filtered[baseIndex];
     
-    const isVideo = globalIndex % 5 === 0; // Every 5th article is a video news
+    const isVideo = globalIndex % 5 === 0;
     
     result.push({
       ...base,
       id: `${base.id}-${globalIndex}`,
       category: category === 'local' ? 'local' : base.category,
-      videoUrl: isVideo ? "https://www.youtube.com/embed/dQw4w9WgXcQ" : base.videoUrl, // Mock video
+      videoUrl: isVideo ? "https://www.youtube.com/embed/dQw4w9WgXcQ" : base.videoUrl,
       location: location,
       title: {
         en: `${category === 'local' && location ? '[' + location + '] ' : ''}${base.title.en} (Live Update ${globalIndex + 1})`,

@@ -85,27 +85,55 @@ export function NewsGrid() {
       return;
     }
 
-    // simulated delay to show we're fetching from massive db
-    setTimeout(() => {
-      const data = fetchArticles(1, ARTICLES_PER_PAGE, selectedCategory, countryCode);
+    // Fetch from massive db
+    const loadNews = async () => {
+      const data = await fetchArticles(1, ARTICLES_PER_PAGE, selectedCategory, countryCode);
       setArticles(data);
       localStorage.setItem(CACHE_KEY, JSON.stringify(data));
       setIsLoading(false);
-    }, 300);
+    };
+    loadNews();
   }, [selectedCategory, countryCode, isOffline]);
 
-  const handleLoadMore = () => {
+  const handleLoadMore = async () => {
     if (isOffline) return; // Prevent load more when offline
     
     const nextPage = page + 1;
     setIsLoading(true);
-    setTimeout(() => {
-      const moreData = fetchArticles(nextPage, ARTICLES_PER_PAGE, selectedCategory, countryCode);
-      setArticles(prev => [...prev, ...moreData]);
-      setPage(nextPage);
-      setIsLoading(false);
-    }, 400);
+    const moreData = await fetchArticles(nextPage, ARTICLES_PER_PAGE, selectedCategory, countryCode);
+    setArticles(prev => {
+        // Prevent duplicates
+        const existingIds = new Set(prev.map(a => a.id));
+        const newUnique = moreData.filter(a => !existingIds.has(a.id));
+        return [...prev, ...newUnique];
+    });
+    setPage(nextPage);
+    setIsLoading(false);
   };
+
+  useEffect(() => {
+    if (isLoading || isOffline) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          handleLoadMore();
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    const target = document.getElementById('infinite-scroll-trigger');
+    if (target) {
+      observer.observe(target);
+    }
+
+    return () => {
+      if (target) {
+        observer.unobserve(target);
+      }
+    };
+  }, [isLoading, isOffline, page, selectedCategory, countryCode]);
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
@@ -278,15 +306,7 @@ export function NewsGrid() {
         )}
         
         {!isLoading && !isOffline && (
-          <button 
-            onClick={handleLoadMore}
-            className="group relative inline-flex items-center justify-center bg-white hover:bg-slate-50 text-slate-700 font-bold py-4 px-10 rounded-full border border-slate-300 hover:border-blue-400 hover:text-blue-700 transition-all shadow-sm overflow-hidden animate-in zoom-in duration-500"
-          >
-            <span className="relative z-10 flex items-center gap-2">
-              Load More Articles
-              <span className="text-xs font-normal text-slate-500 group-hover:text-blue-500">(100k+ Available)</span>
-            </span>
-          </button>
+          <div id="infinite-scroll-trigger" className="h-10 w-full" />
         )}
       </div>
 

@@ -73,7 +73,7 @@ export function SearchBar({ onSelectArticle }: { onSelectArticle: (article: Arti
           });
         }
 
-        const mockData = fetchArticles(1, 100, 'all', undefined);
+        const mockData = await fetchArticles(1, 100, 'all', undefined);
         const mockMatch = mockData.filter(a => {
             const titleQuery = a.title[language] || a.title['en'] || '';
             const summaryQuery = a.summary[language] || a.summary['en'] || '';
