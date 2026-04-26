@@ -2,7 +2,7 @@ export const translations: Record<string, Record<string, string>> = {
   en: {
     latestNews: "Latest News",
     trending: "Trending",
-    world: "World",
+    world: "World News",
     tech: "Technology",
     login: "Sign In with Google",
     logout: "Sign Out",
@@ -15,7 +15,7 @@ export const translations: Record<string, Record<string, string>> = {
   hi: {
     latestNews: "ताज़ा खबर",
     trending: "ट्रेंडिंग",
-    world: "दुनिया",
+    world: "विश्व समाचार",
     tech: "प्रौद्योगिकी",
     login: "Google से साइन इन करें",
     logout: "साइन आउट",
@@ -28,7 +28,7 @@ export const translations: Record<string, Record<string, string>> = {
   fr: {
     latestNews: "Dernières Nouvelles",
     trending: "Tendance",
-    world: "Monde",
+    world: "Actualités du Monde",
     tech: "Technologie",
     login: "Se connecter avec Google",
     logout: "Se déconnecter",
@@ -41,7 +41,7 @@ export const translations: Record<string, Record<string, string>> = {
   es: {
     latestNews: "Últimas Noticias",
     trending: "Tendencias",
-    world: "Mundo",
+    world: "Noticias del Mundo",
     tech: "Tecnología",
     login: "Iniciar sesión con Google",
     logout: "Cerrar sesión",
