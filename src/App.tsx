@@ -11,12 +11,14 @@ import { NewsGrid } from './components/NewsGrid';
 import { Footer } from './components/Footer';
 import { AboutUs } from './components/AboutUs';
 import { UserProfile } from './components/UserProfile';
+import { SEO } from './components/SEO';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<'home' | 'about' | 'profile'>('home');
 
   return (
     <AppProvider>
+      <SEO />
       <div className="min-h-screen border-t-4 border-blue-900 bg-slate-50 font-sans text-gray-900 flex flex-col">
         <Header 
           onLogoClick={() => setCurrentPage('home')} 

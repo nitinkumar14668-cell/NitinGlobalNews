@@ -8,6 +8,7 @@ import { useAppContext } from '../contexts/AppContext';
 import { getTranslation } from '../lib/translations';
 import { handleFirestoreError, OperationType } from '../lib/firestoreError';
 import { Comments } from './Comments';
+import { SEO } from './SEO';
 
 interface ArticleModalProps {
   article: Article | null;
@@ -118,6 +119,12 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+      <SEO 
+        title={`${title} - NitinGlobalNews`}
+        description={content.substring(0, 150) + '...'}
+        image={article.imageUrl}
+        type="article"
+      />
       <div 
         className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" 
         onClick={onClose}
