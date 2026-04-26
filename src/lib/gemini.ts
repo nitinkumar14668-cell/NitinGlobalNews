@@ -29,6 +29,33 @@ export async function generateArticleImage(prompt: string): Promise<string> {
   throw new Error("No image generated");
 }
 
+export async function generateFullArticle(summary: string, languageCode: string): Promise<string> {
+  const langMap: Record<string, string> = {
+    'en': 'English',
+    'hi': 'Hindi',
+    'fr': 'French',
+    'es': 'Spanish'
+  };
+  const targetLanguage = langMap[languageCode] || languageCode;
+  
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: {
+        parts: [
+          {
+            text: `You are a professional journalist. Write a detailed, comprehensive, full-length news article (around 4-5 paragraphs) in ${targetLanguage} based on the following short summary or title: "${summary}". Do not include any title, only the article body text. Use professional formatting, line breaks, and clear sentence structure.`
+          }
+        ]
+      }
+    });
+    return response.text || summary;
+  } catch (error) {
+    console.error("Full article generation error", error);
+    return summary;
+  }
+}
+
 export async function translateText(text: string, targetLanguageCode: string): Promise<string> {
   // Map code to full language name to help LLM
   const langMap: Record<string, string> = {

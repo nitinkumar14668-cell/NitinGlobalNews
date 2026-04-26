@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import ReactPlayer from "react-player";
 import {
   X,
   ExternalLink,
@@ -83,6 +84,7 @@ export function ArticlePage({ article, onBack }: ArticlePageProps) {
   const [translatedTitle, setTranslatedTitle] = useState<string>(initialTitle);
   const [translatedContent, setTranslatedContent] = useState<string>(initialContent);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [isExpanding, setIsExpanding] = useState(false);
 
   useEffect(() => {
     setCurrentImageUrl(article.imageUrl);
@@ -106,23 +108,45 @@ export function ArticlePage({ article, onBack }: ArticlePageProps) {
   };
 
   useEffect(() => {
-    const translateArticle = async () => {
-      if (article.title[language] && (article.content?.[language] || article.summary[language])) {
-        setTranslatedTitle(article.title[language]);
-        setTranslatedContent(article.content?.[language] || article.summary[language]);
-        return;
+    const expandAndTranslateArticle = async () => {
+      let currentTitle = initialTitle;
+      let currentContent = initialContent;
+      
+      // Auto translate if requested and not english
+      if (autoTranslate && language !== 'en' && !article.title[language]) {
+         setIsTranslating(true);
+         try {
+           const { translateText } = await import("../lib/gemini");
+           currentTitle = await translateText(article.title["en"], language);
+           currentContent = await translateText(article.content?.["en"] || article.summary["en"], language);
+         } catch (e) { console.error(e); }
+         setIsTranslating(false);
+      } else if (article.title[language]) {
+        currentTitle = article.title[language];
+        currentContent = article.content?.[language] || article.summary[language];
       }
       
-      if (!autoTranslate || language === 'en') {
-        setTranslatedTitle(initialTitle);
-        setTranslatedContent(initialContent);
-        return;
-      }
+      setTranslatedTitle(currentTitle);
       
-      handleManualTranslate();
+      // If content is very short, generate a full detailed article using AI
+      if (currentContent.length < 500) {
+         setIsExpanding(true);
+         try {
+           const { generateFullArticle } = await import("../lib/gemini");
+           const expanded = await generateFullArticle(currentContent, language);
+           setTranslatedContent(expanded);
+         } catch(e) {
+           console.error(e);
+           setTranslatedContent(currentContent);
+         }
+         setIsExpanding(false);
+      } else {
+         setTranslatedContent(currentContent);
+      }
     };
-    translateArticle();
-  }, [article, language, initialTitle, initialContent, autoTranslate]);
+    
+    expandAndTranslateArticle();
+  }, [article.id, language, autoTranslate]);
 
   const handleGenerateImage = async () => {
     setIsGeneratingImage(true);
@@ -231,26 +255,22 @@ export function ArticlePage({ article, onBack }: ArticlePageProps) {
         <div className="relative aspect-video w-full bg-slate-100 overflow-hidden group">
           {article.videoUrl ? (
             <div className="w-full h-full bg-black flex items-center justify-center relative">
-              <iframe
-                src={(() => {
-                  const url = article.videoUrl;
-                  if (!url) return '';
-                  if (url.includes('youtube.com/embed/')) return url;
-                  if (url.includes('youtube.com/watch?v=')) {
-                    try {
-                      return `https://www.youtube.com/embed/${new URL(url).searchParams.get('v')}`;
-                    } catch (e) { return url; }
-                  }
-                  if (url.includes('youtu.be/')) {
-                    const videoId = url.split('youtu.be/')[1]?.split('?')[0];
-                    return `https://www.youtube.com/embed/${videoId}`;
-                  }
-                  return url;
-                })()}
-                title="Video News"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="w-full h-full absolute inset-0 border-none"
+              <ReactPlayer
+                url={article.videoUrl}
+                width="100%"
+                height="100%"
+                controls={true}
+                light={article.imageUrl}
+                playIcon={
+                  <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center shadow-lg hover:bg-blue-700 transition">
+                    <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z"/>
+                    </svg>
+                  </div>
+                }
+                pip={true}
+                stopOnUnmount={false}
+                style={{ position: 'absolute', top: 0, left: 0 }}
               />
             </div>
           ) : (
@@ -382,9 +402,10 @@ export function ArticlePage({ article, onBack }: ArticlePageProps) {
           </div>
 
           <div className="prose prose-slate max-w-none text-slate-700 leading-relaxed text-base sm:text-lg whitespace-pre-wrap">
-            {isTranslating ? (
+            {isTranslating || isExpanding ? (
               <div className="space-y-6 animate-pulse mt-4">
                 <div className="space-y-3">
+                  <div className="h-4 bg-slate-200 rounded w-[45%] mb-8"></div>
                   <div className="h-4 bg-slate-200 rounded w-full"></div>
                   <div className="h-4 bg-slate-200 rounded w-[95%]"></div>
                   <div className="h-4 bg-slate-200 rounded w-[90%]"></div>
