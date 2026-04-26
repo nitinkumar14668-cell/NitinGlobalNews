@@ -75,8 +75,8 @@ export function NewsGrid() {
             <article 
               key={article.id} 
               onClick={() => setSelectedArticle(article)}
-              className={`group relative flex flex-col justify-start bg-white p-4 rounded-xl border border-slate-200 shadow-sm transition-all hover:shadow-md cursor-pointer ${
-                isFeatured ? 'col-span-1 md:col-span-12 lg:col-span-7 flex flex-col' : 'col-span-1 md:col-span-6 lg:col-span-5 flex-row gap-4'
+              className={`group relative flex justify-start bg-white p-4 rounded-xl border border-slate-200 shadow-sm transition-all hover:shadow-md cursor-pointer ${
+                isFeatured ? 'col-span-1 md:col-span-12 lg:col-span-8 flex-col' : 'col-span-1 md:col-span-6 lg:col-span-4 flex-col sm:flex-row lg:flex-col gap-4'
               }`}
             >
               {isFeatured ? (
@@ -105,21 +105,21 @@ export function NewsGrid() {
                 </div>
               ) : (
                 <>
-                  <div className="w-24 h-24 bg-slate-200 rounded flex-shrink-0 overflow-hidden">
+                  <div className="w-full sm:w-32 lg:w-full h-48 sm:h-32 lg:h-48 bg-slate-200 rounded flex-shrink-0 overflow-hidden">
                      <img
                         src={article.imageUrl}
                         alt={title}
                         className="w-full h-full object-cover"
                       />
                   </div>
-                  <div className="flex flex-col flex-1 pl-4 md:pl-0">
+                  <div className="flex flex-col flex-1 pl-0 sm:pl-4 lg:pl-0 mt-4 sm:mt-0 lg:mt-4">
                     <span className="text-[10px] font-bold text-red-600 uppercase">
                       {getTranslation(language, article.category) || article.category}
                     </span>
-                    <h3 className="font-bold text-sm leading-snug mt-1 hover:text-blue-800 cursor-pointer line-clamp-2">
+                    <h3 className="font-bold text-base sm:text-sm lg:text-lg leading-snug mt-1 hover:text-blue-800 cursor-pointer line-clamp-2">
                        {title}
                     </h3>
-                    <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
+                    <p className="text-sm sm:text-xs lg:text-sm text-slate-500 mt-2 line-clamp-2">
                       {summary}
                     </p>
                     <div className="flex items-center gap-1 text-slate-400 mt-2 text-[10px]">
