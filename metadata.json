@@ -1,0 +1,8 @@
+{
+  "name": "NitinGlobalNews",
+  "description": "A global news platform with Google Sign-In, and location-based automated language and time adjustments.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": []
+}
