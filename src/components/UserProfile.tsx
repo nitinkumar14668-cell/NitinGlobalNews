@@ -24,6 +24,7 @@ import {
   MessageSquare,
   ArrowLeft,
   Settings,
+  Shield,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -40,8 +41,8 @@ interface UserComment {
   createdAt: Timestamp;
 }
 
-export function UserProfile({ onBack }: { onBack: () => void }) {
-  const { user, language, articleStats, logout } = useAppContext();
+export function UserProfile({ onBack, onAdminClick }: { onBack: () => void, onAdminClick?: () => void }) {
+  const { user, language, articleStats, logout, isAdmin } = useAppContext();
   const [bookmarks, setBookmarks] = useState<
     (Article & { bookmarkId: string })[]
   >([]);
@@ -191,7 +192,16 @@ export function UserProfile({ onBack }: { onBack: () => void }) {
               alt={user.displayName || "User"}
               className="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-white shadow-md object-cover bg-white z-10"
             />
-            <div className="flex gap-3 relative z-10">
+            <div className="flex gap-3 relative z-10 flex-wrap justify-end">
+              {isAdmin && onAdminClick && (
+                <button
+                  onClick={onAdminClick}
+                  className="flex items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-5 py-2 text-sm font-bold text-red-700 shadow-sm hover:bg-red-100 transition-colors"
+                >
+                  <Shield className="w-4 h-4" />
+                  Admin
+                </button>
+              )}
               <button
                 onClick={() => setShowSettings(true)}
                 className="flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-5 py-2 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"

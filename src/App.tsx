@@ -26,7 +26,6 @@ export default function App() {
         <Header
           onLogoClick={() => setCurrentPage("home")}
           onProfileClick={() => setCurrentPage("profile")}
-          onAdminClick={() => setCurrentPage("admin")}
         />
         <LocationPrompt />
         <div className="flex-1">
@@ -34,7 +33,7 @@ export default function App() {
           {currentPage === "about" && <AboutUs />}
           {currentPage === "admin" && <AdminPanel onBack={() => setCurrentPage("home")} />}
           {currentPage === "profile" && (
-            <UserProfile onBack={() => setCurrentPage("home")} />
+            <UserProfile onBack={() => setCurrentPage("home")} onAdminClick={() => setCurrentPage("admin")} />
           )}
         </div>
         <Footer onAboutClick={() => setCurrentPage("about")} />

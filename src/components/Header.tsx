@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Globe, LogIn, LogOut, Menu, Shield } from 'lucide-react';
+import { Globe, LogIn, LogOut, Menu } from 'lucide-react';
 import { useAppContext } from '../contexts/AppContext';
 import { getTranslation } from '../lib/translations';
 import { Clock } from './Clock';
@@ -7,8 +7,8 @@ import { SearchBar } from './SearchBar';
 import { ArticleModal } from './ArticleModal';
 import { Article } from '../data/news';
 
-export function Header({ onLogoClick, onProfileClick, onAdminClick }: { onLogoClick: () => void, onProfileClick: () => void, onAdminClick?: () => void }) {
-  const { user, isAdmin, login, logout, language } = useAppContext();
+export function Header({ onLogoClick, onProfileClick }: { onLogoClick: () => void, onProfileClick: () => void }) {
+  const { user, login, logout, language } = useAppContext();
   const [searchSelectedArticle, setSearchSelectedArticle] = useState<Article | null>(null);
 
   return (
@@ -39,15 +39,6 @@ export function Header({ onLogoClick, onProfileClick, onAdminClick }: { onLogoCl
           </div>
           {user ? (
             <div className="flex items-center gap-2 sm:gap-3">
-              {isAdmin && onAdminClick && (
-                <button
-                  onClick={onAdminClick}
-                  className="hidden md:flex items-center gap-1 bg-red-50 text-red-700 border border-red-200 px-2 py-1.5 rounded text-sm font-bold hover:bg-red-100 transition-colors"
-                >
-                  <Shield className="w-4 h-4" />
-                  Admin
-                </button>
-              )}
               <button onClick={onProfileClick} className="flex flex-col sm:flex-row items-center gap-2 hover:opacity-80 transition-opacity" title="View Profile">
                 <img src={user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName || 'User'}&background=0D8ABC&color=fff`} alt={user.displayName || 'User'} className="h-8 w-8 rounded-full border border-slate-200" />
               </button>
