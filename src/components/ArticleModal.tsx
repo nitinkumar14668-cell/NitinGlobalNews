@@ -10,6 +10,7 @@ import {
   Bookmark,
   BookmarkCheck,
   Eye,
+  Loader2,
 } from "lucide-react";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import {
@@ -80,8 +81,8 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
 
   if (!article) return null;
 
-  const title = article.title[language] || article.title["en"];
-  const content =
+  const initialTitle = article.title[language] || article.title["en"];
+  const initialContent =
     article.content?.[language] ||
     article.content?.["en"] ||
     article.summary[language] ||
@@ -91,16 +92,47 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
 
   const [currentImageUrl, setCurrentImageUrl] = useState(article.imageUrl);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [translatedTitle, setTranslatedTitle] = useState<string>(initialTitle);
+  const [translatedContent, setTranslatedContent] = useState<string>(initialContent);
+  const [isTranslating, setIsTranslating] = useState(false);
 
   useEffect(() => {
     if (article) setCurrentImageUrl(article.imageUrl);
   }, [article]);
 
+  useEffect(() => {
+    const translateArticle = async () => {
+      // If we already have the exact language in our mock data or content, use it.
+      if (article.title[language] && (article.content?.[language] || article.summary[language])) {
+        setTranslatedTitle(article.title[language]);
+        setTranslatedContent(article.content?.[language] || article.summary[language]);
+        return;
+      }
+      
+      // Otherwise, hit the API to translate from English to the preferred mode
+      setIsTranslating(true);
+      try {
+        const { translateText } = await import("../lib/gemini");
+        const newTitle = await translateText(article.title["en"], language);
+        const newContent = await translateText(article.content?.["en"] || article.summary["en"], language);
+        setTranslatedTitle(newTitle);
+        setTranslatedContent(newContent);
+      } catch (error) {
+        console.error("Translation failed", error);
+        setTranslatedTitle(initialTitle);
+        setTranslatedContent(initialContent);
+      } finally {
+        setIsTranslating(false);
+      }
+    };
+    translateArticle();
+  }, [article, language, initialTitle, initialContent]);
+
   const handleGenerateImage = async () => {
     setIsGeneratingImage(true);
     try {
       const { generateArticleImage } = await import("../lib/gemini");
-      const newImage = await generateArticleImage(title + ". " + content);
+      const newImage = await generateArticleImage(translatedTitle + ". " + translatedContent);
       setCurrentImageUrl(newImage);
     } catch (error) {
       console.error("Error generating image:", error);
@@ -142,8 +174,8 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
   const handleShare = async () => {
     const urlStr = article.sourceUrl || window.location.href;
     const shareData = {
-      title: title,
-      text: content.substring(0, 100) + "...",
+      title: translatedTitle,
+      text: translatedContent.substring(0, 100) + "...",
       url: urlStr,
     };
 
@@ -167,8 +199,8 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
       <SEO
-        title={`${title} - NitinGlobalNews`}
-        description={content.substring(0, 150) + "..."}
+        title={`${translatedTitle} - NitinGlobalNews`}
+        description={translatedContent.substring(0, 150) + "..."}
         image={article.imageUrl}
         type="article"
       />
@@ -220,7 +252,7 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
                     ) : (
                       <img
                         src={currentImageUrl}
-                        alt={title}
+                        alt={translatedTitle}
                         className="h-full w-full object-cover"
                       />
                     )}
@@ -267,8 +299,9 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
               <span className="mb-3 inline-block rounded bg-blue-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest">
                 {categoryStr}
               </span>
-              <h2 className="news-serif text-2xl sm:text-3xl md:text-4xl font-bold leading-tight">
-                {title}
+              <h2 className="news-serif text-2xl sm:text-3xl md:text-4xl font-bold leading-tight flex items-center gap-2">
+                {translatedTitle}
+                {isTranslating && <Loader2 className="w-5 h-5 animate-spin" />}
               </h2>
             </div>
           </div>
@@ -293,7 +326,17 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
             </div>
 
             <div className="prose prose-slate max-w-none text-slate-700 leading-relaxed text-base sm:text-lg whitespace-pre-wrap">
-              {content}
+              {isTranslating ? (
+                <div className="flex flex-col gap-4 animate-pulse">
+                  <div className="h-4 bg-slate-200 rounded w-full"></div>
+                  <div className="h-4 bg-slate-200 rounded w-11/12"></div>
+                  <div className="h-4 bg-slate-200 rounded w-10/12"></div>
+                  <div className="h-4 bg-slate-200 rounded w-full"></div>
+                  <div className="h-4 bg-slate-200 rounded w-4/5"></div>
+                </div>
+              ) : (
+                translatedContent
+              )}
             </div>
 
             <div className="mt-10 flex flex-wrap items-center justify-center gap-4 border-t border-slate-100 pt-8">
