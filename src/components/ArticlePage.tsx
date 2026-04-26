@@ -42,7 +42,7 @@ interface ArticlePageProps {
 }
 
 export function ArticlePage({ article, onBack }: ArticlePageProps) {
-  const { user, language, recordView, articleStats, autoTranslate } = useAppContext();
+  const { user, language, recordView, articleStats, autoTranslate, recordCategoryRead } = useAppContext();
   const [copied, setCopied] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
@@ -51,9 +51,10 @@ export function ArticlePage({ article, onBack }: ArticlePageProps) {
   useEffect(() => {
     if (article && !hasRecordedViewRef.current) {
       recordView(article.id);
+      recordCategoryRead(article.category);
       hasRecordedViewRef.current = true;
     }
-  }, [article, recordView]);
+  }, [article, recordView, recordCategoryRead]);
 
   useEffect(() => {
     window.scrollTo(0, 0);

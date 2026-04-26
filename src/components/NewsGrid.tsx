@@ -25,7 +25,7 @@ const SkeletonArticle = ({ isFeatured }: { isFeatured?: boolean }) => (
 );
 
 export function NewsGrid({ onArticleSelect }: { onArticleSelect: (article: Article) => void }) {
-  const { language, articleStats, countryCode, isOffline } = useAppContext();
+  const { language, articleStats, countryCode, isOffline, userPreferences } = useAppContext();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [page, setPage] = useState<number>(1);
   const [articles, setArticles] = useState<Article[]>([]);
@@ -34,6 +34,15 @@ export function NewsGrid({ onArticleSelect }: { onArticleSelect: (article: Artic
   const ARTICLES_PER_PAGE = 20;
 
   const CACHE_KEY = `cachedArticles_${selectedCategory}_${countryCode}`;
+
+  let queryCategory = selectedCategory;
+  if (selectedCategory === 'recommended') {
+    if (userPreferences && Object.keys(userPreferences).length > 0) {
+      queryCategory = Object.keys(userPreferences).reduce((a, b) => userPreferences[a] > userPreferences[b] ? a : b);
+    } else {
+      queryCategory = 'all';
+    }
+  }
 
   useEffect(() => {
     // Listen to live articles
@@ -85,20 +94,20 @@ export function NewsGrid({ onArticleSelect }: { onArticleSelect: (article: Artic
 
     // Fetch from massive db
     const loadNews = async () => {
-      const data = await fetchArticles(1, ARTICLES_PER_PAGE, selectedCategory, countryCode);
+      const data = await fetchArticles(1, ARTICLES_PER_PAGE, queryCategory, countryCode);
       setArticles(data);
       localStorage.setItem(CACHE_KEY, JSON.stringify(data));
       setIsLoading(false);
     };
     loadNews();
-  }, [selectedCategory, countryCode, isOffline]);
+  }, [selectedCategory, queryCategory, countryCode, isOffline]);
 
   const handleLoadMore = async () => {
     if (isOffline) return; // Prevent load more when offline
     
     const nextPage = page + 1;
     setIsLoading(true);
-    const moreData = await fetchArticles(nextPage, ARTICLES_PER_PAGE, selectedCategory, countryCode);
+    const moreData = await fetchArticles(nextPage, ARTICLES_PER_PAGE, queryCategory, countryCode);
     setArticles(prev => {
         // Prevent duplicates
         const existingIds = new Set(prev.map(a => a.id));
@@ -158,9 +167,15 @@ export function NewsGrid({ onArticleSelect }: { onArticleSelect: (article: Artic
       <div className="flex flex-col mb-6 border-b border-slate-200 pb-3">
         <div className="flex items-end justify-between">
           <h1 className="news-serif text-3xl font-bold tracking-tight text-blue-900 flex items-center gap-2">
-            {getTranslation(language, 'latestNews')}
+            {selectedCategory === 'recommended' ? 'Recommended for You' : getTranslation(language, 'latestNews')}
           </h1>
-          <div className="hidden sm:flex gap-4 text-xs font-bold uppercase tracking-wider text-slate-500">
+          <div className="hidden sm:flex gap-4 text-xs font-bold uppercase tracking-wider text-slate-500 overflow-x-auto">
+            <button 
+              onClick={() => handleCategoryChange('recommended')}
+              className={`${selectedCategory === 'recommended' ? 'text-blue-900 border-b-2 border-blue-900' : 'hover:text-blue-900'} pb-1 transition-colors whitespace-nowrap`}
+            >
+              For You
+            </button>
             <button 
               onClick={() => handleCategoryChange('all')}
               className={`${selectedCategory === 'all' ? 'text-blue-900 border-b-2 border-blue-900' : 'hover:text-blue-900'} pb-1 transition-colors`}

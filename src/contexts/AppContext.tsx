@@ -23,6 +23,8 @@ type AppContextType = {
   requestLocation: () => void;
   recordView: (articleId: string) => Promise<void>;
   recordStat: (articleId: string, statType: 'bookmarkCount' | 'commentCount', inc: number) => Promise<void>;
+  userPreferences: Record<string, number>;
+  recordCategoryRead: (category: string) => void;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -38,8 +40,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
   const [articleStats, setArticleStats] = useState<Record<string, { viewCount?: number, bookmarkCount?: number, commentCount?: number }>>({});
+  const [userPreferences, setUserPreferences] = useState<Record<string, number>>({});
 
   const isAdmin = user?.email === 'nitinkumar14668@gmail.com';
+
+  useEffect(() => {
+    try {
+      const prefs = localStorage.getItem('userPreferences');
+      if (prefs) {
+        setUserPreferences(JSON.parse(prefs));
+      }
+    } catch (e) {
+      console.error('Error loading preferences', e);
+    }
+  }, []);
 
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);
@@ -122,6 +136,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const recordCategoryRead = (category: string) => {
+    setUserPreferences(prev => {
+      const newPrefs = { ...prev, [category]: (prev[category] || 0) + 1 };
+      try {
+        localStorage.setItem('userPreferences', JSON.stringify(newPrefs));
+      } catch (e) {
+        console.error('Error saving preferences', e);
+      }
+      return newPrefs;
+    });
+  };
+
   const getLanguageFromCountry = (country: string) => {
     const map: Record<string, string> = {
       'IN': 'hi',
@@ -166,7 +192,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AppContext.Provider value={{ user, loadingAuth, locationState, countryCode, language, setLanguage, autoTranslate, setAutoTranslate, isOffline, timezone, articleStats, isAdmin, login, logout, requestLocation, recordView, recordStat }}>
+    <AppContext.Provider value={{ user, loadingAuth, locationState, countryCode, language, setLanguage, autoTranslate, setAutoTranslate, isOffline, timezone, articleStats, isAdmin, login, logout, requestLocation, recordView, recordStat, userPreferences, recordCategoryRead }}>
       {children}
     </AppContext.Provider>
   );
