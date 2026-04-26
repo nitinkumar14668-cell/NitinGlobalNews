@@ -62,6 +62,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       await signInWithPopup(auth, googleProvider);
     } catch (error) {
       console.error('Login error', error);
+      if (error instanceof Error) {
+        alert(`Login failed: ${error.message} - Make sure your domain is added to Firebase Authentication Authorized Domains.`);
+      }
     }
   };
 
