@@ -3,7 +3,25 @@ import { Article, fetchArticles } from '../data/news';
 import { useAppContext } from '../contexts/AppContext';
 import { getTranslation } from '../lib/translations';
 import { ArticleModal } from './ArticleModal';
-import { Eye, PlayCircle, MapPin } from 'lucide-react';
+import { Eye, PlayCircle, MapPin, Loader2 } from 'lucide-react';
+
+const SkeletonArticle = ({ isFeatured }: { isFeatured?: boolean }) => (
+  <div className={`group cursor-pointer bg-white p-4 rounded-xl border border-slate-200 shadow-sm animate-pulse ${isFeatured ? 'col-span-1 md:col-span-12 lg:col-span-8 flex-col' : 'col-span-1 md:col-span-6 lg:col-span-4 flex-col sm:flex-row lg:flex-col gap-4'}`}>
+    {isFeatured ? (
+      <div className="w-full aspect-video bg-slate-200 rounded-xl mb-4"></div>
+    ) : (
+      <>
+        <div className="w-full sm:w-32 lg:w-full h-48 sm:h-32 lg:h-48 bg-slate-200 rounded flex-shrink-0"></div>
+        <div className="flex flex-col flex-1 mt-4 sm:mt-0 lg:mt-4 space-y-3">
+          <div className="h-3 bg-slate-200 rounded w-1/4"></div>
+          <div className="h-4 bg-slate-200 rounded w-full"></div>
+          <div className="h-4 bg-slate-200 rounded w-5/6"></div>
+          <div className="h-3 bg-slate-200 rounded w-1/2 mt-auto"></div>
+        </div>
+      </>
+    )}
+  </div>
+);
 
 export function NewsGrid() {
   const { language, articleStats, countryCode } = useAppContext();
@@ -88,24 +106,35 @@ export function NewsGrid() {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        {articles.map((article, index) => {
-          const title = article.title[language] || article.title['en'];
-          const summary = article.summary[language] || article.summary['en'];
-          const isFeatured = index === 0;
+        {isLoading && page === 1 ? (
+          <>
+            <SkeletonArticle isFeatured={true} />
+            {Array.from({ length: 6 }).map((_, i) => (
+              <SkeletonArticle key={i} />
+            ))}
+          </>
+        ) : (
+          articles.map((article, index) => {
+            const title = article.title[language] || article.title['en'];
+            const summary = article.summary[language] || article.summary['en'];
+            const isFeatured = index === 0;
 
-          return (
-            <article 
-              key={article.id} 
-              onClick={() => setSelectedArticle(article)}
-              className={`group relative flex justify-start bg-white p-4 rounded-xl border border-slate-200 shadow-sm transition-all hover:shadow-md cursor-pointer ${
-                isFeatured ? 'col-span-1 md:col-span-12 lg:col-span-8 flex-col' : 'col-span-1 md:col-span-6 lg:col-span-4 flex-col sm:flex-row lg:flex-col gap-4'
-              }`}
-            >
+            return (
+              <article 
+                key={article.id} 
+                onClick={() => setSelectedArticle(article)}
+                className={`group relative flex justify-start bg-white p-4 rounded-xl border border-slate-200 shadow-sm transition-all hover:shadow-md cursor-pointer ${
+                  isFeatured ? 'col-span-1 md:col-span-12 lg:col-span-8 flex-col' : 'col-span-1 md:col-span-6 lg:col-span-4 flex-col sm:flex-row lg:flex-col gap-4'
+                }`}
+              >
               {isFeatured ? (
                 <div className="relative w-full aspect-video bg-slate-300 rounded-xl overflow-hidden mb-4 group-hover:shadow-lg transition-shadow">
                   <img
                     src={article.imageUrl}
                     alt={title}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1546422904-90eab23c3d7e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"; // fallback generic news image
+                    }}
                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   {article.videoUrl && (
@@ -137,6 +166,9 @@ export function NewsGrid() {
                      <img
                         src={article.imageUrl}
                         alt={title}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1546422904-90eab23c3d7e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+                        }}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       {article.videoUrl && (
@@ -165,22 +197,27 @@ export function NewsGrid() {
               )}
             </article>
           );
-        })}
+        })
+        )}
       </div>
       
       {/* Loading State & Load More */}
-      <div className="mt-10 flex flex-col items-center justify-center w-full min-h-[60px]">
-        {isLoading ? (
-          <div className="flex items-center gap-3 text-blue-600 font-medium">
-             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-             Loading more articles...
+      <div className="mt-6 flex flex-col items-center justify-center w-full min-h-[100px]">
+        {isLoading && page > 1 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full mb-8">
+             {Array.from({ length: 3 }).map((_, i) => <SkeletonArticle key={`load-more-${i}`} />)}
           </div>
-        ) : (
+        )}
+        
+        {!isLoading && (
           <button 
             onClick={handleLoadMore}
-            className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-8 rounded-full border border-slate-300 transition-colors shadow-sm"
+            className="group relative inline-flex items-center justify-center bg-white hover:bg-slate-50 text-slate-700 font-bold py-4 px-10 rounded-full border border-slate-300 hover:border-blue-400 hover:text-blue-700 transition-all shadow-sm overflow-hidden animate-in zoom-in duration-500"
           >
-            Load More Articles (100k+ Available)
+            <span className="relative z-10 flex items-center gap-2">
+              Load More Articles
+              <span className="text-xs font-normal text-slate-500 group-hover:text-blue-500">(100k+ Available)</span>
+            </span>
           </button>
         )}
       </div>

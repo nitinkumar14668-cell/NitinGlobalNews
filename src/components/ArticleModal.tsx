@@ -104,6 +104,24 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
     if (article) setCurrentImageUrl(article.imageUrl);
   }, [article]);
 
+  const handleManualTranslate = async () => {
+      // Hit the API to translate from English to the preferred mode
+      setIsTranslating(true);
+      try {
+        const { translateText } = await import("../lib/gemini");
+        const newTitle = await translateText(article.title["en"], language);
+        const newContent = await translateText(article.content?.["en"] || article.summary["en"], language);
+        setTranslatedTitle(newTitle);
+        setTranslatedContent(newContent);
+      } catch (error) {
+        console.error("Translation failed", error);
+        setTranslatedTitle(initialTitle);
+        setTranslatedContent(initialContent);
+      } finally {
+        setIsTranslating(false);
+      }
+  };
+
   useEffect(() => {
     const translateArticle = async () => {
       // If we already have the exact language in our mock data or content, use it.
@@ -123,24 +141,6 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
     };
     translateArticle();
   }, [article, language, initialTitle, initialContent, autoTranslate]);
-
-  const handleManualTranslate = async () => {
-      // Hit the API to translate from English to the preferred mode
-      setIsTranslating(true);
-      try {
-        const { translateText } = await import("../lib/gemini");
-        const newTitle = await translateText(article.title["en"], language);
-        const newContent = await translateText(article.content?.["en"] || article.summary["en"], language);
-        setTranslatedTitle(newTitle);
-        setTranslatedContent(newContent);
-      } catch (error) {
-        console.error("Translation failed", error);
-        setTranslatedTitle(initialTitle);
-        setTranslatedContent(initialContent);
-      } finally {
-        setIsTranslating(false);
-      }
-  };
 
   const handleGenerateImage = async () => {
     setIsGeneratingImage(true);
@@ -277,6 +277,9 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
                       <img
                         src={currentImageUrl}
                         alt={translatedTitle}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1546422904-90eab23c3d7e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+                        }}
                         className="h-full w-full object-cover"
                       />
                     )}
@@ -364,12 +367,23 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
 
             <div className="prose prose-slate max-w-none text-slate-700 leading-relaxed text-base sm:text-lg whitespace-pre-wrap">
               {isTranslating ? (
-                <div className="flex flex-col gap-4 animate-pulse">
-                  <div className="h-4 bg-slate-200 rounded w-full"></div>
-                  <div className="h-4 bg-slate-200 rounded w-11/12"></div>
-                  <div className="h-4 bg-slate-200 rounded w-10/12"></div>
-                  <div className="h-4 bg-slate-200 rounded w-full"></div>
-                  <div className="h-4 bg-slate-200 rounded w-4/5"></div>
+                <div className="space-y-6 animate-pulse mt-4">
+                  <div className="space-y-3">
+                    <div className="h-4 bg-slate-200 rounded w-full"></div>
+                    <div className="h-4 bg-slate-200 rounded w-[95%]"></div>
+                    <div className="h-4 bg-slate-200 rounded w-[90%]"></div>
+                    <div className="h-4 bg-slate-200 rounded w-[98%]"></div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="h-4 bg-slate-200 rounded w-[96%]"></div>
+                    <div className="h-4 bg-slate-200 rounded w-full"></div>
+                    <div className="h-4 bg-slate-200 rounded w-[85%]"></div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="h-4 bg-slate-200 rounded w-[92%]"></div>
+                    <div className="h-4 bg-slate-200 rounded w-[97%]"></div>
+                    <div className="h-4 bg-slate-200 rounded w-[70%]"></div>
+                  </div>
                 </div>
               ) : (
                 translatedContent
