@@ -19,7 +19,7 @@ export function Clock() {
   }).format(time);
 
   return (
-    <div className="text-sm font-mono text-gray-500 hidden md:block">
+    <div className="text-[10px] leading-tight font-mono text-slate-500 hidden md:block">
       {formattedTime}
     </div>
   );

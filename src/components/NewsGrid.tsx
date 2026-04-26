@@ -7,19 +7,19 @@ export function NewsGrid() {
   const { language } = useAppContext();
 
   return (
-    <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-      <div className="flex items-end justify-between mb-8">
-        <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+    <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+      <div className="flex items-end justify-between mb-6 border-b border-slate-200 pb-3">
+        <h1 className="news-serif text-3xl font-bold tracking-tight text-blue-900">
           {getTranslation(language, 'latestNews')}
         </h1>
-        <div className="hidden sm:flex gap-4 text-sm font-semibold text-gray-500">
-          <button className="text-blue-600 border-b-2 border-blue-600 pb-1">{getTranslation(language, 'world')}</button>
-          <button className="hover:text-gray-900 pb-1">{getTranslation(language, 'trending')}</button>
-          <button className="hover:text-gray-900 pb-1">{getTranslation(language, 'tech')}</button>
+        <div className="hidden sm:flex gap-4 text-xs font-bold uppercase tracking-wider text-slate-500">
+          <button className="text-blue-900 border-b-2 border-blue-900 pb-1">{getTranslation(language, 'world')}</button>
+          <button className="hover:text-blue-900 pb-1">{getTranslation(language, 'trending')}</button>
+          <button className="hover:text-blue-900 pb-1">{getTranslation(language, 'tech')}</button>
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         {mockArticles.map((article, index) => {
           const title = article.title[language] || article.title['en'];
           const summary = article.summary[language] || article.summary['en'];
@@ -28,48 +28,52 @@ export function NewsGrid() {
           return (
             <article 
               key={article.id} 
-              className={`group relative flex flex-col items-start justify-between rounded-2xl bg-white shadow-sm border border-gray-100 overflow-hidden transition-all hover:shadow-md hover:-translate-y-1 ${
-                isFeatured ? 'md:col-span-2 lg:col-span-2 row-span-2' : ''
+              className={`group relative flex flex-col justify-start bg-white p-4 rounded-xl border border-slate-200 shadow-sm transition-all hover:shadow-md ${
+                isFeatured ? 'col-span-1 md:col-span-12 lg:col-span-7 flex flex-col' : 'col-span-1 md:col-span-6 lg:col-span-5 flex-row gap-4'
               }`}
             >
-              <div className="relative w-full">
-                <img
-                  src={article.imageUrl}
-                  alt={title}
-                  className={`aspect-video w-full rounded-t-2xl object-cover sm:aspect-[2/1] lg:aspect-[3/2] ${isFeatured ? 'lg:aspect-video' : ''}`}
-                />
-                <div className="absolute inset-0 rounded-t-2xl ring-1 ring-inset ring-gray-900/10" />
-              </div>
-              
-              <div className="flex flex-1 flex-col justify-between p-6 w-full">
-                <div className="flex items-center gap-x-4 text-xs">
-                  <time dateTime={article.timestamp} className="text-gray-500 font-mono">
-                    {new Date(article.timestamp).toLocaleDateString(language, { month: 'short', day: 'numeric', year: 'numeric' })}
-                  </time>
-                  <a
-                    href={`#${article.category}`}
-                    className="relative z-10 rounded-full bg-blue-50 px-3 py-1.5 font-medium text-blue-600 hover:bg-blue-100 transition-colors uppercase tracking-wider text-[10px]"
-                  >
-                    {getTranslation(language, article.category) || article.category}
-                  </a>
+              {isFeatured ? (
+                <div className="relative w-full aspect-video bg-slate-300 rounded-xl overflow-hidden mb-4">
+                  <img
+                    src={article.imageUrl}
+                    alt={title}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                  <div className="absolute bottom-0 p-6 w-full">
+                    <span className="bg-blue-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest mb-2 inline-block">
+                      {getTranslation(language, article.category) || article.category}
+                    </span>
+                    <h2 className="news-serif text-3xl text-white font-bold leading-tight line-clamp-2">
+                       {title}
+                    </h2>
+                    <p className="text-slate-300 text-sm mt-2 line-clamp-2">
+                      {summary}
+                    </p>
+                  </div>
                 </div>
-                <div className="group relative mt-4">
-                  <h3 className={`font-semibold leading-tight text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-3 ${isFeatured ? 'text-2xl sm:text-3xl' : 'text-xl'}`}>
-                    <a href="#">
-                      <span className="absolute inset-0" />
-                      {title}
-                    </a>
-                  </h3>
-                  <p className={`mt-3 leading-relaxed text-gray-600 line-clamp-3 ${isFeatured ? 'text-base sm:text-lg' : 'text-sm'}`}>
-                    {summary}
-                  </p>
-                </div>
-                <div className="mt-6 flex items-center justify-between">
-                  <span className="text-sm font-semibold text-blue-600 flex items-center gap-1 group-hover:gap-2 transition-all">
-                    {getTranslation(language, 'readMore')} &rarr;
-                  </span>
-                </div>
-              </div>
+              ) : (
+                <>
+                  <div className="w-24 h-24 bg-slate-200 rounded flex-shrink-0 overflow-hidden">
+                     <img
+                        src={article.imageUrl}
+                        alt={title}
+                        className="w-full h-full object-cover"
+                      />
+                  </div>
+                  <div className="flex flex-col flex-1 pl-4 md:pl-0">
+                    <span className="text-[10px] font-bold text-red-600 uppercase">
+                      {getTranslation(language, article.category) || article.category}
+                    </span>
+                    <h3 className="font-bold text-sm leading-snug mt-1 hover:text-blue-800 cursor-pointer line-clamp-2">
+                       {title}
+                    </h3>
+                    <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
+                      {summary}
+                    </p>
+                  </div>
+                </>
+              )}
             </article>
           );
         })}

@@ -7,16 +7,13 @@ export function Footer() {
   const { language } = useAppContext();
 
   return (
-    <footer className="bg-gray-900 border-t border-gray-800 mt-12 py-12">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2 text-xl font-bold tracking-tight text-white">
-            <Globe className="h-6 w-6 text-blue-500" />
-            <span>NitinGlobalNews</span>
-          </div>
-          <p className="text-sm leading-5 text-gray-400 text-center md:text-left">
-            {getTranslation(language, 'footer')}
-          </p>
+    <footer className="bg-white border-t px-6 py-4 flex items-center justify-between text-[10px] text-slate-400 font-medium mt-auto w-full">
+      <div className="mx-auto w-full max-w-7xl flex flex-col md:flex-row items-center justify-between gap-4">
+        <span>{getTranslation(language, 'footer')}</span>
+        <div className="flex gap-4">
+          <span className="cursor-pointer hover:text-slate-600">GitHub: NitinGlobalNews</span>
+          <span className="cursor-pointer hover:text-slate-600">Terms of Service</span>
+          <span className="cursor-pointer hover:text-slate-600">Privacy Policy</span>
         </div>
       </div>
     </footer>

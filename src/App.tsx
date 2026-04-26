@@ -13,7 +13,7 @@ import { Footer } from './components/Footer';
 export default function App() {
   return (
     <AppProvider>
-      <div className="min-h-screen bg-[#F9FAFB] font-sans text-gray-900 flex flex-col">
+      <div className="min-h-screen border-t-4 border-blue-900 bg-slate-50 font-sans text-gray-900 flex flex-col">
         <Header />
         <LocationPrompt />
         <div className="flex-1">
