@@ -4,6 +4,7 @@ import { db } from '../lib/firebase';
 import { useAppContext } from '../contexts/AppContext';
 import { handleFirestoreError, OperationType } from '../lib/firestoreError';
 import { Loader2, Send } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 
 interface Comment {
   id: string;
@@ -132,8 +133,8 @@ export function Comments({ articleId }: { articleId: string }) {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <span className="font-bold text-slate-800 text-sm">{comment.userName}</span>
-                  <span className="text-xs text-slate-500">
-                    {comment.createdAt?.toDate ? comment.createdAt.toDate().toLocaleDateString() : 'Just now'}
+                  <span className="text-xs text-slate-500 font-medium bg-slate-100 px-2 py-0.5 rounded-full">
+                    {comment.createdAt?.toDate ? formatDistanceToNow(comment.createdAt.toDate(), { addSuffix: true }) : 'Just now'}
                   </span>
                 </div>
                 <p className="text-slate-700 text-sm whitespace-pre-wrap">{comment.text}</p>
